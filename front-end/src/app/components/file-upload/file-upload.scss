@@ -56,6 +56,100 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
+// Analysis Card
+.analysis-card {
+  margin-bottom: 24px;
+  animation: slideDown 0.4s ease-out;
+
+  .analysis-card-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(0, 184, 148, 0.05) 0%, rgba(0, 184, 148, 0.02) 100%);
+    border: 2px solid rgba(0, 184, 148, 0.3);
+    border-radius: $border-radius-lg;
+    box-shadow: 0 6px 30px rgba(0, 184, 148, 0.15);
+
+    .analysis-card-icon {
+      @include flex-center;
+      min-width: 60px;
+      width: 60px;
+      height: 60px;
+      background: $success-color;
+      border-radius: 50%;
+      color: white;
+      font-size: 28px;
+      animation: scaleIn 0.5s ease-out 0.3s backwards;
+    }
+
+    .analysis-card-text {
+      flex: 1;
+
+      h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: $text-dark;
+        margin-bottom: 6px;
+      }
+
+      p {
+        font-size: 14px;
+        color: $text-gray;
+        line-height: 1.5;
+      }
+    }
+
+    .analysis-card-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+
+      .proceed-btn {
+        @include flex-center;
+        gap: 10px;
+        padding: 14px 28px;
+        background: linear-gradient(135deg, $success-color 0%, #00D9A5 100%);
+        color: white;
+        border: none;
+        border-radius: $border-radius-sm;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        transition: $transition;
+        box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 25px rgba(0, 184, 148, 0.4);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+
+      .close-card-btn {
+        @include flex-center;
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.05);
+        border: none;
+        border-radius: 8px;
+        color: $text-gray;
+        cursor: pointer;
+        transition: $transition;
+        font-size: 16px;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.1);
+          color: $text-dark;
+        }
+      }
+    }
+  }
+}
+
 // Upload Content
 .upload-content {
   display: grid;
@@ -142,6 +236,48 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       &:active {
         transform: translateY(0);
       }
+    }
+  }
+
+  // Analyze Button
+  .analyze-btn {
+    @include flex-center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+    color: white;
+    border: none;
+    border-radius: $border-radius-lg;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+
+    i {
+      font-size: 20px;
+    }
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 107, 107, 0.4);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: linear-gradient(135deg, #B2BEC3 0%, #DFE6E9 100%);
+      box-shadow: none;
+    }
+
+    &.analyzing {
+      background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.3);
     }
   }
 
@@ -299,6 +435,17 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         animation: pulse 2s ease-in-out infinite;
       }
 
+      &.pending {
+        background: rgba(255, 165, 2, 0.03);
+        border-color: rgba(255, 165, 2, 0.2);
+      }
+
+      &.analyzing {
+        background: rgba(108, 92, 231, 0.03);
+        border-color: rgba(108, 92, 231, 0.3);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
       &.completed {
         background: rgba(0, 184, 148, 0.03);
         border-color: rgba(0, 184, 148, 0.1);
@@ -389,6 +536,15 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
               transition: width 0.3s ease;
               box-shadow: 0 0 10px rgba(108, 92, 231, 0.4);
             }
+
+            &.analyzing-bar {
+              .progress-fill.analyzing-fill {
+                width: 100%;
+                background: linear-gradient(90deg, $primary-color 0%, $secondary-color 50%, $primary-color 100%);
+                background-size: 200% 100%;
+                animation: analyzing 1.5s ease-in-out infinite;
+              }
+            }
           }
 
           .progress-text {
@@ -397,6 +553,10 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             color: $primary-color;
             min-width: 40px;
             text-align: right;
+
+            &.analyzing-text {
+              animation: pulse-text 1.5s ease-in-out infinite;
+            }
           }
         }
 
@@ -417,6 +577,11 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             &.completed {
               background: rgba(0, 184, 148, 0.1);
               color: $success-color;
+            }
+
+            &.pending {
+              background: rgba(255, 165, 2, 0.1);
+              color: $warning-color;
             }
 
             &.failed {
@@ -519,7 +684,7 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 // Upload Summary
 .upload-summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   background: $bg-white;
   border-radius: $border-radius-lg;
@@ -543,6 +708,14 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     i {
       font-size: 32px;
       color: $success-color;
+    }
+
+    &.warning i {
+      color: $warning-color;
+    }
+
+    &.analyzing i {
+      color: $primary-color;
     }
 
     &.error i {
@@ -579,6 +752,44 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
+@keyframes analyzing {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+@keyframes pulse-text {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
 // Responsive Design
 @media (max-width: 1200px) {
   .upload-content {
@@ -586,7 +797,7 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .upload-summary {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -594,6 +805,22 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   .upload-header {
     h1 {
       font-size: 26px;
+    }
+  }
+
+  .analysis-card {
+    .analysis-card-content {
+      flex-direction: column;
+      text-align: center;
+
+      .analysis-card-actions {
+        width: 100%;
+        flex-direction: column;
+
+        .proceed-btn {
+          width: 100%;
+        }
+      }
     }
   }
 
@@ -654,6 +881,15 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       .browse-btn {
         width: 100%;
         justify-content: center;
+      }
+    }
+
+    .analyze-btn {
+      padding: 14px 20px;
+      font-size: 15px;
+
+      i {
+        font-size: 18px;
       }
     }
   }

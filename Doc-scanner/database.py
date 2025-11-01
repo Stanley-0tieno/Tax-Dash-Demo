@@ -5,7 +5,7 @@ import os
 import json
 
 # Use SQLite by default (no extra dependencies needed)
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./uploaded_files.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Create engine
 engine = create_engine(

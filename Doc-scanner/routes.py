@@ -8,42 +8,81 @@ import json
 router = APIRouter()
 
 
-@router.post("/extract")
-async def extract_pdf(file: UploadFile = File(...)):
+@router.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
     """
-    Extract data from PDF and store in database
+    Upload file WITHOUT extracting data (for demo purposes)
     """
     try:
         # Read file content
         pdf_bytes = await file.read()
         
-        # Create database record
-        db_file = DBUploadedFile(
-            filename=file.filename,
-            file_size=len(pdf_bytes),
-            file_type=file.content_type or "application/pdf",
-            status="uploading",
-            upload_time=datetime.utcnow()
-        )
-        
-        # Insert into database
+        # Insert into database with 'pending' status
         with engine.connect() as conn:
             result = conn.execute(
                 DBUploadedFile.__table__.insert().values(
-                    filename=db_file.filename,
-                    file_size=db_file.file_size,
-                    file_type=db_file.file_type,
-                    status=db_file.status,
-                    upload_time=db_file.upload_time
+                    filename=file.filename,
+                    file_size=len(pdf_bytes),
+                    file_type=file.content_type or "application/pdf",
+                    status="pending",  # Changed from 'uploading' to 'pending'
+                    upload_time=datetime.utcnow(),
+                    file_content=pdf_bytes  # Store file for later analysis
                 )
             )
             conn.commit()
             file_id = result.inserted_primary_key[0]
         
+        # Get the created record
+        with engine.connect() as conn:
+            result = conn.execute(
+                select(DBUploadedFile).where(DBUploadedFile.id == file_id)
+            ).first()
+            
+            if result:
+                return {
+                    "id": result.id,
+                    "filename": result.filename,
+                    "file_size": result.file_size,
+                    "status": result.status,
+                    "upload_time": result.upload_time.isoformat(),
+                    "message": "File uploaded successfully. Click 'Analyze' to extract data."
+                }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/analyze/{file_id}")
+async def analyze_file(file_id: int):
+    """
+    Analyze a previously uploaded file (triggers LLM Whisperer extraction)
+    """
+    try:
+        # Get the file from database
+        with engine.connect() as conn:
+            result = conn.execute(
+                select(DBUploadedFile).where(DBUploadedFile.id == file_id)
+            ).first()
+            
+            if not result:
+                raise HTTPException(status_code=404, detail="File not found")
+            
+            if not result.file_content:
+                raise HTTPException(status_code=400, detail="File content not found")
+            
+            # Update status to 'analyzing'
+            conn.execute(
+                DBUploadedFile.__table__.update()
+                .where(DBUploadedFile.__table__.c.id == file_id)
+                .values(status="analyzing")
+            )
+            conn.commit()
+        
         # Extract data from PDF
+        pdf_bytes = result.file_content
         extracted = extract_from_pdf(pdf_bytes)
         
-        # Update database record with extracted data
+        # Update database with extracted data
         with engine.connect() as conn:
             if extracted.get("success", False):
                 conn.execute(
@@ -51,8 +90,7 @@ async def extract_pdf(file: UploadFile = File(...)):
                     .where(DBUploadedFile.__table__.c.id == file_id)
                     .values(
                         status="completed",
-                        extracted_data=json.dumps(extracted.get("data", {})),
-                        file_content=pdf_bytes  # Optional: store file
+                        extracted_data=json.dumps(extracted.get("data", {}))
                     )
                 )
             else:
@@ -66,35 +104,117 @@ async def extract_pdf(file: UploadFile = File(...)):
                 )
             conn.commit()
         
-        # Get updated record
-        with engine.connect() as conn:
-            result = conn.execute(
-                select(DBUploadedFile).where(DBUploadedFile.id == file_id)
-            ).first()
-            
-            if result:
-                return {
-                    "id": result.id,
-                    "filename": result.filename,
-                    "status": result.status,
-                    "extracted": extracted,
-                    "upload_time": result.upload_time.isoformat()
-                }
+        return {
+            "id": file_id,
+            "status": "completed" if extracted.get("success") else "failed",
+            "extracted": extracted,
+            "message": "Analysis completed successfully" if extracted.get("success") else "Analysis failed"
+        }
     
+    except HTTPException:
+        raise
     except Exception as e:
-        # Try to update database with error if record was created
-        if 'file_id' in locals():
+        # Update status to failed
+        try:
+            with engine.connect() as conn:
+                conn.execute(
+                    DBUploadedFile.__table__.update()
+                    .where(DBUploadedFile.__table__.c.id == file_id)
+                    .values(status="failed", error_message=str(e))
+                )
+                conn.commit()
+        except:
+            pass
+        
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/analyze-all")
+async def analyze_all_pending():
+    """
+    Analyze all pending files at once (for demo bulk analysis)
+    """
+    try:
+        # Get all pending files
+        with engine.connect() as conn:
+            pending_files = conn.execute(
+                select(DBUploadedFile).where(DBUploadedFile.status == "pending")
+            ).fetchall()
+        
+        if not pending_files:
+            return {"message": "No pending files to analyze", "analyzed_count": 0}
+        
+        analyzed_count = 0
+        results = []
+        
+        for file in pending_files:
             try:
+                # Update to analyzing
                 with engine.connect() as conn:
                     conn.execute(
                         DBUploadedFile.__table__.update()
-                        .where(DBUploadedFile.__table__.c.id == file_id)
+                        .where(DBUploadedFile.__table__.c.id == file.id)
+                        .values(status="analyzing")
+                    )
+                    conn.commit()
+                
+                # Extract data
+                extracted = extract_from_pdf(file.file_content)
+                
+                # Update with results
+                with engine.connect() as conn:
+                    if extracted.get("success", False):
+                        conn.execute(
+                            DBUploadedFile.__table__.update()
+                            .where(DBUploadedFile.__table__.c.id == file.id)
+                            .values(
+                                status="completed",
+                                extracted_data=json.dumps(extracted.get("data", {}))
+                            )
+                        )
+                        analyzed_count += 1
+                    else:
+                        conn.execute(
+                            DBUploadedFile.__table__.update()
+                            .where(DBUploadedFile.__table__.c.id == file.id)
+                            .values(
+                                status="failed",
+                                error_message=extracted.get("error", "Unknown error")
+                            )
+                        )
+                    conn.commit()
+                
+                results.append({
+                    "id": file.id,
+                    "filename": file.filename,
+                    "status": "completed" if extracted.get("success") else "failed"
+                })
+            
+            except Exception as e:
+                # Mark as failed
+                with engine.connect() as conn:
+                    conn.execute(
+                        DBUploadedFile.__table__.update()
+                        .where(DBUploadedFile.__table__.c.id == file.id)
                         .values(status="failed", error_message=str(e))
                     )
                     conn.commit()
-            except:
-                pass
+                
+                results.append({
+                    "id": file.id,
+                    "filename": file.filename,
+                    "status": "failed",
+                    "error": str(e)
+                })
         
+        return {
+            "message": f"Analysis completed for {analyzed_count} files",
+            "analyzed_count": analyzed_count,
+            "total_processed": len(pending_files),
+            "results": results
+        }
+    
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 

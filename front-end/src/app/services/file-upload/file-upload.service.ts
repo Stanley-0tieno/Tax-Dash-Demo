@@ -14,6 +14,14 @@ export interface ExtractedData {
 export interface UploadResponse {
   id: number;
   filename: string;
+  file_size: number;
+  status: string;
+  upload_time: string;
+  message: string;
+}
+
+export interface AnalyzeResponse {
+  id: number;
   status: string;
   extracted: {
     success: boolean;
@@ -21,7 +29,7 @@ export interface UploadResponse {
     error?: string;
     raw_text_preview?: string;
   };
-  upload_time: string;
+  message: string;
 }
 
 export interface FileRecord {
@@ -44,14 +52,14 @@ export class FileUploadService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Upload file and extract data
+   * Upload file WITHOUT extraction (just store it)
    */
   uploadFile(file: File): Observable<{progress: number, response?: UploadResponse}> {
     const formData = new FormData();
     formData.append('file', file);
 
     return this.http.post<UploadResponse>(
-      `${this.apiUrl}/extract`,
+      `${this.apiUrl}/upload`,
       formData,
       {
         reportProgress: true,
@@ -70,6 +78,23 @@ export class FileUploadService {
         return { progress: 0 };
       })
     );
+  }
+
+  /**
+   * Analyze a specific file (triggers extraction)
+   */
+  analyzeFile(fileId: number): Observable<AnalyzeResponse> {
+    return this.http.post<AnalyzeResponse>(
+      `${this.apiUrl}/analyze/${fileId}`,
+      {}
+    );
+  }
+
+  /**
+   * Analyze all pending files at once
+   */
+  analyzeAllFiles(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/analyze-all`, {});
   }
 
   /**

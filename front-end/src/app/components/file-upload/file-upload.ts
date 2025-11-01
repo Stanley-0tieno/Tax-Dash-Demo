@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-// import { FileUploadService, ExtractedData } from ''
+import { Router } from '@angular/router';
 import { FileUploadService, ExtractedData } from '../../services/file-upload/file-upload.service';
 
 interface UploadedFile {
@@ -9,7 +9,7 @@ interface UploadedFile {
   name: string;
   size: number;
   type: string;
-  status: 'uploading' | 'completed' | 'failed';
+  status: 'uploading' | 'pending' | 'analyzing' | 'completed' | 'failed';
   progress: number;
   uploadTime?: string;
   file?: File;
@@ -30,24 +30,33 @@ export class FileUpLoad implements OnInit {
   isDragging = false;
   allowedFormats = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
   maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
+  
+  isAnalyzing = false;
+  showAnalysisCard = false;
+  analysisComplete = false;
 
-  constructor(private fileUploadService: FileUploadService) {}
+  constructor(
+    private fileUploadService: FileUploadService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    // Load previously uploaded files from backend
+    // IMPORTANT: Load files immediately on component init
     this.loadUploadedFiles();
   }
 
   loadUploadedFiles(): void {
+    console.log('Loading uploaded files...');
     this.fileUploadService.getAllFiles().subscribe({
       next: (response) => {
+        console.log('Files loaded:', response.files);
         this.uploadedFiles = response.files.map(f => ({
           id: f.id,
           name: f.filename,
           size: f.file_size,
           type: f.file_type,
-          status: f.status as 'uploading' | 'completed' | 'failed',
-          progress: f.status === 'completed' ? 100 : 0,
+          status: f.status as any,
+          progress: f.status === 'completed' ? 100 : f.status === 'analyzing' ? 50 : 0,
           uploadTime: new Date(f.upload_time).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit'
@@ -58,6 +67,7 @@ export class FileUpLoad implements OnInit {
       },
       error: (error) => {
         console.error('Error loading files:', error);
+        alert('Failed to load files from database');
       }
     });
   }
@@ -139,17 +149,12 @@ export class FileUpLoad implements OnInit {
 
         if (event.response) {
           uploadedFile.id = event.response.id;
-          uploadedFile.status = event.response.status as 'completed' | 'failed';
+          uploadedFile.status = 'pending'; // File uploaded but not analyzed yet
           uploadedFile.uploadTime = new Date(event.response.upload_time).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit'
           });
-
-          if (event.response.extracted.success) {
-            uploadedFile.extractedData = event.response.extracted.data;
-          } else {
-            uploadedFile.errorMessage = event.response.extracted.error;
-          }
+          uploadedFile.progress = 0; // Reset progress for pending state
         }
       },
       error: (error) => {
@@ -158,6 +163,80 @@ export class FileUpLoad implements OnInit {
         uploadedFile.errorMessage = error.message || 'Upload failed';
       }
     });
+  }
+
+  /**
+   * NEW: Analyze all pending files
+   */
+  analyzeAllFiles(): void {
+    const pendingCount = this.getPendingCount();
+    
+    if (pendingCount === 0) {
+      alert('No pending files to analyze. Please upload files first.');
+      return;
+    }
+
+    if (!confirm(`Analyze ${pendingCount} pending file(s)?`)) {
+      return;
+    }
+
+    this.isAnalyzing = true;
+    this.showAnalysisCard = false;
+    this.analysisComplete = false;
+
+    // Update UI to show analyzing status
+    this.uploadedFiles
+      .filter(f => f.status === 'pending')
+      .forEach(f => {
+        f.status = 'analyzing';
+        f.progress = 50;
+      });
+
+    // Call backend to analyze all
+    this.fileUploadService.analyzeAllFiles().subscribe({
+      next: (response) => {
+        console.log('Analysis complete:', response);
+        
+        // Reload files to get updated statuses
+        this.loadUploadedFiles();
+        
+        this.isAnalyzing = false;
+        this.analysisComplete = true;
+        this.showAnalysisCard = true;
+
+        // Auto-hide card after 10 seconds
+        setTimeout(() => {
+          this.showAnalysisCard = false;
+        }, 10000);
+      },
+      error: (error) => {
+        console.error('Analysis failed:', error);
+        this.isAnalyzing = false;
+        alert('Analysis failed: ' + (error.message || 'Unknown error'));
+        
+        // Reset analyzing files to pending
+        this.uploadedFiles
+          .filter(f => f.status === 'analyzing')
+          .forEach(f => {
+            f.status = 'pending';
+            f.progress = 0;
+          });
+      }
+    });
+  }
+
+  /**
+   * Navigate to risk analysis page
+   */
+  goToRiskAnalysis(): void {
+    this.router.navigate(['/risk-analysis']);
+  }
+
+  /**
+   * Close analysis card
+   */
+  closeAnalysisCard(): void {
+    this.showAnalysisCard = false;
   }
 
   retryUpload(file: UploadedFile): void {
@@ -199,7 +278,7 @@ export class FileUpLoad implements OnInit {
       const data = JSON.stringify(file.extractedData, null, 2);
       alert(`Extracted Data:\n\n${data}`);
     } else {
-      alert('No extracted data available');
+      alert('No extracted data available. Please analyze the file first.');
     }
   }
 
@@ -268,8 +347,12 @@ export class FileUpLoad implements OnInit {
     return this.uploadedFiles.filter(f => f.status === 'completed').length;
   }
 
-  getUploadingCount(): number {
-    return this.uploadedFiles.filter(f => f.status === 'uploading').length;
+  getPendingCount(): number {
+    return this.uploadedFiles.filter(f => f.status === 'pending').length;
+  }
+
+  getAnalyzingCount(): number {
+    return this.uploadedFiles.filter(f => f.status === 'analyzing').length;
   }
 
   getFailedCount(): number {

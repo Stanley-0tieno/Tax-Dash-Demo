@@ -4,8 +4,30 @@
     <p class="subtitle">Upload documents for analysis</p>
   </div>
 
+  <!-- Analysis Success Card -->
+  <div class="analysis-card" *ngIf="showAnalysisCard && analysisComplete">
+    <div class="analysis-card-content">
+      <div class="analysis-card-icon">
+        <i class="fa-solid fa-check-circle"></i>
+      </div>
+      <div class="analysis-card-text">
+        <h3>Analysis Complete!</h3>
+        <p>Your documents have been analyzed. View the risk assessment to see detailed insights.</p>
+      </div>
+      <div class="analysis-card-actions">
+        <button class="proceed-btn" (click)="goToRiskAnalysis()">
+          <i class="fa-solid fa-arrow-right"></i>
+          Proceed to Risk Analysis
+        </button>
+        <button class="close-card-btn" (click)="closeAnalysisCard()">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="upload-content">
-    <!-- Upload Area -->
+    <!-- Upload Section -->
     <div class="upload-section">
       <div 
         class="upload-dropzone"
@@ -34,6 +56,17 @@
           (change)="onFileSelected($event)"
           style="display: none;">
       </div>
+
+      <!-- Analyze Button -->
+      <button 
+        class="analyze-btn" 
+        (click)="analyzeAllFiles()"
+        [disabled]="isAnalyzing || getPendingCount() === 0"
+        [class.analyzing]="isAnalyzing">
+        <i class="fa-solid" [class.fa-brain]="!isAnalyzing" [class.fa-spinner]="isAnalyzing" [class.fa-spin]="isAnalyzing"></i>
+        <span *ngIf="!isAnalyzing">Analyze Documents ({{ getPendingCount() }})</span>
+        <span *ngIf="isAnalyzing">Analyzing...</span>
+      </button>
 
       <!-- Allowed Formats -->
       <div class="allowed-formats">
@@ -74,6 +107,8 @@
           class="file-item" 
           *ngFor="let file of uploadedFiles; let i = index"
           [class.uploading]="file.status === 'uploading'"
+          [class.pending]="file.status === 'pending'"
+          [class.analyzing]="file.status === 'analyzing'"
           [class.completed]="file.status === 'completed'"
           [class.failed]="file.status === 'failed'">
           
@@ -87,7 +122,7 @@
               <span class="file-size">{{ formatFileSize(file.size) }}</span>
             </div>
 
-            <!-- Progress Bar -->
+            <!-- Progress Bar for uploading -->
             <div class="progress-container" *ngIf="file.status === 'uploading'">
               <div class="progress-bar">
                 <div 
@@ -98,14 +133,23 @@
               <span class="progress-text">{{ file.progress }}%</span>
             </div>
 
+            <!-- Progress Bar for analyzing -->
+            <div class="progress-container" *ngIf="file.status === 'analyzing'">
+              <div class="progress-bar analyzing-bar">
+                <div class="progress-fill analyzing-fill"></div>
+              </div>
+              <span class="progress-text analyzing-text">Analyzing...</span>
+            </div>
+
             <!-- Status Messages -->
-            <div class="file-status" *ngIf="file.status !== 'uploading'">
+            <div class="file-status" *ngIf="file.status !== 'uploading' && file.status !== 'analyzing'">
               <span class="status-badge" [class]="file.status">
+                <i *ngIf="file.status === 'pending'" class="fa-solid fa-clock"></i>
                 <i *ngIf="file.status === 'completed'" class="fa-solid fa-circle-check"></i>
                 <i *ngIf="file.status === 'failed'" class="fa-solid fa-circle-xmark"></i>
-                {{ file.status === 'completed' ? 'Completed' : 'Failed' }}
+                {{ file.status === 'completed' ? 'Analyzed' : file.status === 'pending' ? 'Pending Analysis' : 'Failed' }}
               </span>
-              <span class="upload-time" *ngIf="file.status === 'completed'">
+              <span class="upload-time" *ngIf="file.uploadTime">
                 {{ file.uploadTime }}
               </span>
             </div>
@@ -116,7 +160,7 @@
               class="action-btn view-btn" 
               *ngIf="file.status === 'completed'"
               (click)="viewFile(file)"
-              title="View file">
+              title="View extracted data">
               <i class="fa-solid fa-eye"></i>
             </button>
             <button 
@@ -159,15 +203,22 @@
     <div class="summary-item">
       <i class="fa-solid fa-file-circle-check"></i>
       <div>
-        <span class="summary-label">Successfully Uploaded</span>
+        <span class="summary-label">Analyzed</span>
         <span class="summary-value">{{ getCompletedCount() }}</span>
       </div>
     </div>
-    <div class="summary-item">
+    <div class="summary-item warning">
       <i class="fa-solid fa-clock"></i>
       <div>
-        <span class="summary-label">In Progress</span>
-        <span class="summary-value">{{ getUploadingCount() }}</span>
+        <span class="summary-label">Pending Analysis</span>
+        <span class="summary-value">{{ getPendingCount() }}</span>
+      </div>
+    </div>
+    <div class="summary-item analyzing" *ngIf="getAnalyzingCount() > 0">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <div>
+        <span class="summary-label">Analyzing</span>
+        <span class="summary-value">{{ getAnalyzingCount() }}</span>
       </div>
     </div>
     <div class="summary-item error">
