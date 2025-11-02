@@ -729,6 +729,11 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding-bottom: 18px;
     border-bottom: 2px solid $bg-light;
 
+    .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+   }
     h2 {
       font-size: 20px;
       font-weight: 600;
@@ -745,6 +750,37 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       font-weight: 700;
       letter-spacing: 0.3px;
     }
+      .reload-btn {
+    @include flex-center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.12) 0%, rgba(162, 155, 254, 0.12) 100%);
+    border: none;
+    border-radius: 10px;
+    color: $primary-color;
+    cursor: pointer;
+    transition: $transition;
+    font-size: 16px;
+
+    i {
+      transition: transform 0.6s ease;
+    }
+
+    &:hover {
+      background: $primary-color;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+
+      i {
+        transform: rotate(360deg);
+      }
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
   }
 
   .files-list {

@@ -60,11 +60,13 @@ export class FileUpLoad implements OnInit, OnDestroy {
     // Load files IMMEDIATELY (don't wait for WebSocket)
     this.loadUploadedFiles();
     
-    // Subscribe to WebSocket messages
-    this.wsSubscription = this.fileUploadService.messages$.subscribe(message => {
-      this.handleWebSocketMessage(message);
-    });
-    console.log('✅ WebSocket subscription active');
+    // Subscribe to WebSocket messages if available
+    if (this.fileUploadService.messages$) {
+      this.wsSubscription = this.fileUploadService.messages$.subscribe(message => {
+        this.handleWebSocketMessage(message);
+      });
+      console.log('✅ WebSocket subscription active');
+    }
   }
 
   ngOnDestroy(): void {
@@ -78,7 +80,6 @@ export class FileUpLoad implements OnInit, OnDestroy {
       console.log('⏳ Already loading files...');
       return;
     }
-
     this.isLoading = true;
     console.log('📂 Fetching files from database...');
     
@@ -118,6 +119,13 @@ export class FileUpLoad implements OnInit, OnDestroy {
     });
   }
 
+  // Reload button method
+  reLoad(): void {
+    console.log('🔄 Reload clicked - Refreshing file list...');
+    this.isLoading = false; // Reset loading flag
+    this.loadUploadedFiles();
+  }
+
   handleWebSocketMessage(message: any): void {
     console.log('📨 WebSocket message received:', message);
     
@@ -125,7 +133,6 @@ export class FileUpLoad implements OnInit, OnDestroy {
       const fileIndex = this.uploadedFiles.findIndex(f => f.id === message.file_id);
       
       if (fileIndex !== -1) {
-        // Update existing file
         const file = this.uploadedFiles[fileIndex];
         file.status = message.status;
         
@@ -145,10 +152,8 @@ export class FileUpLoad implements OnInit, OnDestroy {
           console.log(`⏳ File ${message.file_id} pending`);
         }
         
-        // Force change detection
         this.uploadedFiles = [...this.uploadedFiles];
         
-        // Check if all analysis is complete
         const analyzingCount = this.getAnalyzingCount();
         const pendingCount = this.getPendingCount();
         
@@ -156,11 +161,10 @@ export class FileUpLoad implements OnInit, OnDestroy {
         
         if (this.isAnalyzing && analyzingCount === 0 && pendingCount === 0) {
           console.log('✅ All files processed, finishing analysis...');
-          setTimeout(() => this.finishAnalysis(), 500); // Small delay for UI
+          setTimeout(() => this.finishAnalysis(), 500);
         }
       } else {
         console.warn(`⚠️ File ${message.file_id} not found in list, reloading...`);
-        // File not in list, reload all files
         this.loadUploadedFiles();
       }
     } else if (message.type === 'analysis_progress') {
@@ -201,7 +205,7 @@ export class FileUpLoad implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     if (input.files) {
       this.handleFiles(input.files);
-      input.value = ''; // Clear input
+      input.value = '';
     }
   }
 
@@ -220,13 +224,8 @@ export class FileUpLoad implements OnInit, OnDestroy {
         file: file
       };
 
-      // Add to top of list
       this.uploadedFiles.unshift(uploadedFile);
-      
-      // Force UI update
       this.uploadedFiles = [...this.uploadedFiles];
-      
-      // Start upload
       this.uploadToBackend(uploadedFile);
     });
   }
@@ -266,8 +265,6 @@ export class FileUpLoad implements OnInit, OnDestroy {
         if (event.progress !== undefined) {
           uploadedFile.progress = event.progress;
           console.log(`Upload progress: ${event.progress}%`);
-          
-          // Force UI update
           this.uploadedFiles = [...this.uploadedFiles];
         }
 
@@ -280,8 +277,6 @@ export class FileUpLoad implements OnInit, OnDestroy {
             minute: '2-digit'
           });
           uploadedFile.progress = 0;
-          
-          // Force UI update
           this.uploadedFiles = [...this.uploadedFiles];
         }
       },
@@ -289,8 +284,6 @@ export class FileUpLoad implements OnInit, OnDestroy {
         console.error('❌ Upload failed:', error);
         uploadedFile.status = 'failed';
         uploadedFile.errorMessage = error.message || 'Upload failed';
-        
-        // Force UI update
         this.uploadedFiles = [...this.uploadedFiles];
       }
     });
@@ -323,7 +316,6 @@ export class FileUpLoad implements OnInit, OnDestroy {
     this.showAnalysisCard = false;
     this.analysisComplete = false;
 
-    // Update UI to show analyzing status
     this.uploadedFiles
       .filter(f => f.status === 'pending')
       .forEach(f => {
@@ -331,15 +323,12 @@ export class FileUpLoad implements OnInit, OnDestroy {
         f.progress = 10;
       });
 
-    // Force UI update
     this.uploadedFiles = [...this.uploadedFiles];
 
-    // Call backend - WebSocket will handle all updates!
     this.fileUploadService.analyzeAllFiles().subscribe({
       next: (response) => {
         console.log('✅ Analysis started:', response);
         this.analysisMessage = response.message || 'Analysis in progress...';
-        // WebSocket will handle progress updates!
       },
       error: (error) => {
         console.error('❌ Analysis failed:', error);
@@ -352,7 +341,6 @@ export class FileUpLoad implements OnInit, OnDestroy {
           null
         );
         
-        // Reset analyzing files to pending
         this.uploadedFiles
           .filter(f => f.status === 'analyzing')
           .forEach(f => {
@@ -475,7 +463,6 @@ export class FileUpLoad implements OnInit, OnDestroy {
     }
   }
 
-  // Custom Dialog Methods
   showDialogBox(
     type: 'info' | 'success' | 'error' | 'confirm',
     title: string,

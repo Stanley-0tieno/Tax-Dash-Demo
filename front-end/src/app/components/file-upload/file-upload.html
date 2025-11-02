@@ -125,12 +125,18 @@
 
     <!-- Uploaded Files List -->
     <div class="uploaded-section">
-      <div class="section-header">
-        <h2>Uploaded Files</h2>
-        <span class="file-count" *ngIf="uploadedFiles.length > 0">
-          {{ uploadedFiles.length }} file(s)
-        </span>
-      </div>
+ <div class="section-header">
+  <div class="header-left">
+    <h2>Uploaded Files</h2>
+    <span class="file-count" *ngIf="uploadedFiles.length > 0">
+      {{ uploadedFiles.length }} file(s)
+    </span>
+  </div>
+  
+  <button class="reload-btn" (click)="reLoad()" title="Refresh file list">
+    <i class="fa-solid fa-rotate-right"></i>
+  </button>
+</div>
 
       <!-- Files List -->
       <div class="files-list" *ngIf="uploadedFiles.length > 0; else emptyState">
