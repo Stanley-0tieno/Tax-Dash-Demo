@@ -144,7 +144,7 @@ export class CompanyProfile implements OnInit {
   }
 
   contactSupport(): void {
-    alert('Opening support chat...\n\nConnecting you with our support team.');
-    // In production, open chat widget or support interface
+    window.open('http://localhost:4201/chat/welcome', '_blank');
+
   }
 }
