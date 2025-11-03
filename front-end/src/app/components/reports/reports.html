@@ -37,6 +37,8 @@
           <option value="tax-risk">Tax Risk Summary</option>
           <option value="vat">VAT</option>
           <option value="payroll">Payroll</option>
+          <option value="bank">Bank Statement</option>
+          <option value="income">Income Statement</option>
         </select>
       </div>
       
@@ -50,18 +52,9 @@
         </select>
       </div>
     </div>
-    
-    <!-- <div class="search-box">
-      <input 
-        type="text" 
-        placeholder="Search reports..." 
-        class="search-input"
-        [(ngModel)]="searchQuery">
-      <i class="fa-solid fa-search"></i>
-    </div> -->
   </div>
 
-  <!-- Summary Cards -->
+  <!-- Summary Cards - UPDATED WITH DYNAMIC DATA -->
   <div class="summary-cards">
     <div class="summary-card">
       <div class="card-icon purple">
@@ -69,7 +62,7 @@
       </div>
       <div class="card-content">
         <h3>Total Reports</h3>
-        <div class="card-value">{{totalReports}}</div>
+        <div class="card-value">{{ totalReports }}</div>
       </div>
     </div>
 
@@ -79,7 +72,7 @@
       </div>
       <div class="card-content">
         <h3>Reports This Month</h3>
-        <div class="card-value">{{reportsThisMonth}}</div>
+        <div class="card-value">{{ reportsThisMonth }}</div>
       </div>
     </div>
 
@@ -89,7 +82,7 @@
       </div>
       <div class="card-content">
         <h3>Avg. Risk Level</h3>
-        <div class="card-value">Moderate</div>
+        <div class="card-value">{{ avgRiskLevel }}</div>
       </div>
     </div>
 
@@ -99,7 +92,7 @@
       </div>
       <div class="card-content">
         <h3>Last Generated</h3>
-        <div class="card-value">2h ago</div>
+        <div class="card-value">{{ lastGenerated }}</div>
       </div>
     </div>
   </div>
@@ -156,28 +149,28 @@
               <td>
                 <div class="report-name">
                   <i class="fa-solid fa-file-pdf pdf-icon"></i>
-                  <span>{{report.name}}</span>
+                  <span>{{ report.name }}</span>
                 </div>
               </td>
               <td>
-                <span class="report-type">{{report.type}}</span>
+                <span class="report-type">{{ report.type }}</span>
               </td>
               <td>
-                <span class="period">{{report.period}}</span>
+                <span class="period">{{ report.period }}</span>
               </td>
               <td>
                 <span class="risk-badge" [ngClass]="report.riskLevel">
                   <span class="badge-dot"></span>
-                  {{report.riskLevel | titlecase}}
+                  {{ report.riskLevel | titlecase }}
                 </span>
               </td>
               <td>
-                <span class="date">{{report.dateGenerated}}</span>
+                <span class="date">{{ report.dateGenerated }}</span>
               </td>
               <td>
                 <span class="status-badge" [ngClass]="report.status">
                   <i [class]="getStatusIcon(report.status)"></i>
-                  {{report.status | titlecase}}
+                  {{ report.status | titlecase }}
                 </span>
               </td>
               <td>
@@ -222,28 +215,28 @@
           </div>
           
           <div class="card-body">
-            <h3>{{report.name}}</h3>
+            <h3>{{ report.name }}</h3>
             <div class="card-meta">
               <span class="meta-item">
                 <i class="fa-solid fa-tag"></i>
-                {{report.type}}
+                {{ report.type }}
               </span>
               <span class="meta-item">
                 <i class="fa-solid fa-calendar"></i>
-                {{report.period}}
+                {{ report.period }}
               </span>
             </div>
             
             <div class="card-risk">
               <span class="risk-badge" [ngClass]="report.riskLevel">
                 <span class="badge-dot"></span>
-                {{report.riskLevel | titlecase}} Risk
+                {{ report.riskLevel | titlecase }} Risk
               </span>
             </div>
             
             <div class="card-date">
               <i class="fa-solid fa-clock"></i>
-              {{report.dateGenerated}}
+              {{ report.dateGenerated }}
             </div>
           </div>
           
@@ -274,7 +267,7 @@
       <!-- Pagination -->
       <div class="pagination" *ngIf="filteredReports.length > 0">
         <div class="pagination-info">
-          Showing {{(currentPage - 1) * pageSize + 1}} - {{Math.min(currentPage * pageSize, filteredReports.length)}} of {{filteredReports.length}} reports
+          Showing {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, filteredReports.length) }} of {{ filteredReports.length }} reports
         </div>
         <div class="pagination-controls">
           <button 
@@ -283,7 +276,7 @@
             (click)="previousPage()">
             <i class="fa-solid fa-chevron-left"></i>
           </button>
-          <span class="page-number">{{currentPage}} / {{totalPages}}</span>
+          <span class="page-number">{{ currentPage }} / {{ totalPages }}</span>
           <button 
             class="page-btn" 
             [disabled]="currentPage === totalPages"
@@ -299,7 +292,7 @@
   <div class="page-footer">
     <p>
       <i class="fa-solid fa-shield-halved"></i>
-      Last updated: 2 hours ago • All reports are securely stored.
+      Last updated: {{ lastGenerated }} • All reports are securely stored.
     </p>
   </div>
 </div>
@@ -322,6 +315,8 @@
           <option value="tax-risk">Tax Risk Summary</option>
           <option value="vat">VAT Analysis</option>
           <option value="payroll">Payroll Compliance</option>
+          <option value="bank-statement">Bank Statement</option>
+          <option value="income-statement">Income Statement</option>
           <option value="comprehensive">Comprehensive Report</option>
         </select>
       </div>
@@ -387,7 +382,7 @@
       <button class="primary-btn" (click)="generateReport()" [disabled]="isGenerating">
         <i class="fa-solid fa-spinner fa-spin" *ngIf="isGenerating"></i>
         <i class="fa-solid fa-file-lines" *ngIf="!isGenerating"></i>
-        {{isGenerating ? 'Generating...' : 'Generate Report'}}
+        {{ isGenerating ? 'Generating...' : 'Generate Report' }}
       </button>
     </div>
   </div>
@@ -409,9 +404,9 @@
           <i class="fa-solid fa-file-pdf"></i>
         </div>
         <div class="preview-info">
-          <h3>{{selectedReport.name}}</h3>
+          <h3>{{ selectedReport.name }}</h3>
           <p class="preview-meta">
-            Generated on {{selectedReport.dateGenerated}} • {{selectedReport.type}}
+            Generated on {{ selectedReport.dateGenerated }} • {{ selectedReport.type }}
           </p>
         </div>
       </div>
@@ -419,25 +414,25 @@
       <div class="preview-stats">
         <div class="stat-item">
           <span class="stat-label">Period</span>
-          <span class="stat-value">{{selectedReport.period}}</span>
+          <span class="stat-value">{{ selectedReport.period }}</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Risk Level</span>
           <span class="risk-badge" [ngClass]="selectedReport.riskLevel">
             <span class="badge-dot"></span>
-            {{selectedReport.riskLevel | titlecase}}
+            {{ selectedReport.riskLevel | titlecase }}
           </span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Status</span>
           <span class="status-badge" [ngClass]="selectedReport.status">
             <i [class]="getStatusIcon(selectedReport.status)"></i>
-            {{selectedReport.status | titlecase}}
+            {{ selectedReport.status | titlecase }}
           </span>
         </div>
         <div class="stat-item">
           <span class="stat-label">File Size</span>
-          <span class="stat-value">2.4 MB</span>
+          <span class="stat-value">{{ selectedReport.fileSize }}</span>
         </div>
       </div>
       
@@ -445,6 +440,7 @@
         <div class="thumbnail-placeholder">
           <i class="fa-solid fa-file-pdf"></i>
           <p>PDF Report Preview</p>
+          <small>{{ selectedReport.name }}</small>
         </div>
       </div>
       
@@ -484,7 +480,7 @@
       <div class="progress-bar">
         <div class="progress-fill" [style.width.%]="downloadProgress"></div>
       </div>
-      <p>{{downloadProgress}}% complete</p>
+      <p>{{ downloadProgress }}% complete</p>
     </div>
   </div>
 </div>

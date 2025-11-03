@@ -31,6 +31,7 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 // Dashboard Content
 .dashboard-content {
   .content-header {
+    @include flex-between;
     margin-bottom: 28px;
 
     h1 {
@@ -39,10 +40,140 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       color: $text-dark;
       letter-spacing: -0.5px;
     }
+
+    .demo-btn {
+      background: linear-gradient(135deg, #FFA502 0%, #FF6B6B 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: $transition;
+      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+      }
+    }
   }
 }
 
-// Dashboard Grid
+// ============================================
+// EMPTY STATE (First-time user)
+// ============================================
+.empty-state-container {
+  @include flex-center;
+  min-height: 60vh;
+  padding: 40px 20px;
+
+  .empty-state-card {
+    max-width: 600px;
+    text-align: center;
+    background: $bg-white;
+    padding: 60px 40px;
+    border-radius: $border-radius-lg;
+    box-shadow: $card-shadow;
+
+    .empty-icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 30px;
+      background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+      border-radius: 50%;
+      @include flex-center;
+      box-shadow: 0 10px 40px rgba(108, 92, 231, 0.3);
+
+      i {
+        font-size: 60px;
+        color: white;
+      }
+    }
+
+    h2 {
+      font-size: 32px;
+      font-weight: 700;
+      color: $text-dark;
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 16px;
+      color: $text-gray;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .cta-button {
+      background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      transition: $transition;
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.3);
+
+      i {
+        font-size: 18px;
+      }
+
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
+      }
+
+      &:active {
+        transform: translateY(-1px);
+      }
+    }
+
+    .empty-features {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 48px;
+      flex-wrap: wrap;
+
+      .feature-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+
+        i {
+          font-size: 28px;
+          color: $primary-color;
+          padding: 16px;
+          background: rgba(108, 92, 231, 0.1);
+          border-radius: 50%;
+          width: 60px;
+          height: 60px;
+          @include flex-center;
+        }
+
+        span {
+          font-size: 13px;
+          color: $text-gray;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+// DASHBOARD GRID (With Data)
+// ============================================
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -293,8 +424,16 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
+
+    @media (max-width: 1400px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
 
     .stat-item {
       display: flex;
@@ -369,6 +508,7 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         stroke: $primary-color;
         stroke-width: 14;
         stroke-linecap: round;
+        stroke-dasharray: 502;
         transition: stroke-dashoffset 1s ease;
       }
 
@@ -511,6 +651,38 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
+// View Full Analysis Button
+.view-analysis-card {
+  grid-column: span 3;
+  text-align: center;
+  padding: 20px 0;
+
+  .view-analysis-btn {
+    background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+    color: white;
+    border: none;
+    padding: 16px 40px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    transition: $transition;
+    box-shadow: 0 6px 20px rgba(108, 92, 231, 0.3);
+
+    i {
+      font-size: 18px;
+    }
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
+    }
+  }
+}
+
 // Responsive Design
 @media (max-width: 1600px) {
   .dashboard-grid {
@@ -533,6 +705,10 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     .card.efficiency-card {
       grid-column: span 1;
     }
+
+    .view-analysis-card {
+      grid-column: span 2;
+    }
   }
 }
 
@@ -541,13 +717,17 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     grid-template-columns: 1fr;
     gap: 20px;
     
-    .card {
+    .card, .view-analysis-card {
       grid-column: span 1 !important;
     }
   }
 
   .card.stats-card .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .empty-state-container .empty-state-card {
+    padding: 40px 30px;
   }
 }
 
@@ -560,8 +740,33 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 20px;
   }
 
-  .content-header h1 {
-    font-size: 26px;
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 16px;
+
+    h1 {
+      font-size: 26px;
+    }
+  }
+
+  .empty-state-container .empty-state-card {
+    .empty-icon {
+      width: 100px;
+      height: 100px;
+
+      i {
+        font-size: 50px;
+      }
+    }
+
+    h2 {
+      font-size: 26px;
+    }
+
+    .empty-features {
+      gap: 24px;
+    }
   }
 }
 
@@ -581,5 +786,14 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   .card.efficiency-card .circular-progress {
     width: 150px;
     height: 150px;
+  }
+
+  .empty-state-container .empty-state-card {
+    padding: 30px 20px;
+
+    .cta-button {
+      padding: 14px 24px;
+      font-size: 14px;
+    }
   }
 }

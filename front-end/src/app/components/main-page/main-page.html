@@ -1,9 +1,46 @@
 <div class="dashboard-content">
   <div class="content-header">
     <h1>Overview</h1>
+    
+    <!-- Show "Load Demo Data" button for testing (remove in production) -->
+    <button *ngIf="!hasAnalysisData" class="demo-btn" (click)="loadDemoData()">
+      <i class="fa-solid fa-flask"></i> Load Demo Data
+    </button>
   </div>
 
-  <div class="dashboard-grid">
+  <!-- EMPTY STATE: First-time user -->
+  <div *ngIf="!hasAnalysisData" class="empty-state-container">
+    <div class="empty-state-card">
+      <div class="empty-icon">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
+      <h2>Welcome to TaxDash!</h2>
+      <p>Get started by uploading your financial documents to generate your first tax risk analysis.</p>
+      <button class="cta-button" (click)="startAnalysis()">
+        <i class="fa-solid fa-upload"></i>
+        Upload Documents & Start Analysis
+      </button>
+      <div class="empty-features">
+        <div class="feature-item">
+          <i class="fa-solid fa-brain"></i>
+          <span>AI-powered risk detection</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Compliance monitoring</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Real-time insights</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD GRID: After analysis completed -->
+  <div *ngIf="hasAnalysisData" class="dashboard-grid">
+    
+    <!-- Risk Card -->
     <div class="card risk-card">
       <div class="card-gradient">
         <div class="card-header-inline">
@@ -12,12 +49,13 @@
         </div>
         <div class="risk-score">
           <h2>Tax Risk Score</h2>
-          <div class="score-value">68</div>
-          <p class="score-label">Moderate Risk</p>
+          <div class="score-value">{{ dashboardData.riskScore }}</div>
+          <p class="score-label">{{ dashboardData.riskLabel }}</p>
         </div>
       </div>
     </div>
 
+    <!-- Chart Card -->
     <div class="card chart-card">
       <div class="card-header">
         <h3>Tax Compliance Trend</h3>
@@ -31,6 +69,7 @@
       </div>
     </div>
 
+    <!-- Profile Card -->
     <div class="card profile-card">
       <div class="profile-header">
         <img src="assets/default-avator.png" alt="User" class="profile-avatar">
@@ -44,10 +83,11 @@
       </div>
       <div class="total-risk">
         <span>Total Risk</span>
-        <h2>15/100</h2>
+        <h2>{{ dashboardData.totalRisk }}/100</h2>
       </div>
     </div>
 
+    <!-- Stats Card -->
     <div class="card stats-card">
       <div class="card-header">
         <h3>Document Summary</h3>
@@ -57,27 +97,28 @@
         <div class="stat-item">
           <i class="fa-solid fa-file-pdf"></i>
           <div class="stat-info">
-            <p>Invoices</p>
-            <h4>12 uploaded</h4>
+            <p>Payroll</p>
+            <h4>{{ dashboardData.documents.payroll }} uploaded</h4>
           </div>
         </div>
         <div class="stat-item">
           <i class="fa-solid fa-file-pdf"></i>
           <div class="stat-info">
             <p>Income Statements</p>
-            <h4>4 Analysed</h4>
+            <h4>{{ dashboardData.documents.incomeStatements }} Analysed</h4>
           </div>
         </div>
         <div class="stat-item">
           <i class="fa-solid fa-file-pdf"></i>
           <div class="stat-info">
             <p>VAT reports</p>
-            <h4>2 pending</h4>
+            <h4>{{ dashboardData.documents.vatReports }} pending</h4>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Efficiency Card -->
     <div class="card efficiency-card">
       <div class="card-header">
         <h3>Tax Compliance Efficiency</h3>
@@ -87,10 +128,10 @@
           <svg viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="80" class="progress-bg"></circle>
             <circle cx="100" cy="100" r="80" class="progress-bar" 
-                    style="stroke-dasharray: 502; stroke-dashoffset: 40.16;"></circle>
+                    [style.stroke-dashoffset]="502 - (502 * dashboardData.compliancePercentage / 100)"></circle>
           </svg>
           <div class="progress-text">
-            <h2>92%</h2>
+            <h2>{{ dashboardData.compliancePercentage }}%</h2>
             <span class="badge-small">compliant</span>
           </div>
         </div>
@@ -107,52 +148,34 @@
       </div>
     </div>
 
+    <!-- Activities Card -->
     <div class="card activities-card">
       <div class="card-header">
         <h3>Detected Anomalies</h3>
       </div>
       <div class="activities-list">
-        <div class="activity-item">
-          <div class="activity-icon pink">
-            <i class="fa-solid fa-circle-exclamation"></i>
+        <div class="activity-item" *ngFor="let anomaly of dashboardData.anomalies">
+          <div class="activity-icon" [class]="anomaly.color">
+            <i class="fa-solid" [class]="anomaly.icon"></i>
           </div>
           <div class="activity-info">
-            <p>Missing VAT entry</p>
-            <span>Invoice #104</span>
+            <p>{{ anomaly.title }}</p>
+            <span>{{ anomaly.subtitle }}</span>
           </div>
-          <span class="activity-amount">Ksh 111,001,200.50</span>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon green">
-            <i class="fa-solid fa-chart-line"></i>
-          </div>
-          <div class="activity-info">
-            <p>Inconsistent Income data</p>
-            <span>Q3 Report</span>
-          </div>
-          <span class="activity-amount positive">April 15</span>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon pink">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-          </div>
-          <div class="activity-info">
-            <p>Upload Data</p>
-            <span>Action Required</span>
-          </div>
-          <span class="activity-amount">Click to</span>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon gray">
-            <i class="fa-solid fa-file-pdf"></i>
-          </div>
-          <div class="activity-info">
-            <p>Tax Reports</p>
-            <span>Generated</span>
-          </div>
-          <span class="activity-amount">Generated</span>
+          <span class="activity-amount" [class.positive]="anomaly.type === 'warning'">
+            {{ anomaly.value }}
+          </span>
         </div>
       </div>
     </div>
+
+    <!-- View Full Analysis Button -->
+    <div class="view-analysis-card">
+      <button class="view-analysis-btn" (click)="viewFullAnalysis()">
+        <i class="fa-solid fa-chart-line"></i>
+        View Complete Risk Analysis
+      </button>
+    </div>
+
   </div>
 </div>

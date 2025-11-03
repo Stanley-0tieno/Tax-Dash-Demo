@@ -11,6 +11,8 @@ interface Report {
   dateGenerated: string;
   status: 'completed' | 'pending' | 'in-progress';
   selected?: boolean;
+  filePath: string; // Path to the PDF file in assets
+  fileSize: string;
 }
 
 interface NewReport {
@@ -57,10 +59,6 @@ export class Reports implements OnInit {
   currentPage = 1;
   pageSize = 10;
   
-  // Summary stats
-  totalReports = 14;
-  reportsThisMonth = 3;
-  
   // Selected report for viewing
   selectedReport: Report | null = null;
   
@@ -77,97 +75,62 @@ export class Reports implements OnInit {
     emailCopy: false
   };
   
-  // Sample data
+  // Sample data - 5 reports as per your requirement
   reports: Report[] = [
     {
       id: '1',
-      name: 'Q3_2025_Risk_Summary.pdf',
-      type: 'Tax Risk Summary',
-      period: 'Q3 2025',
-      riskLevel: 'medium',
-      dateGenerated: 'Oct 21, 2025',
-      status: 'completed'
+      name: 'Payroll_Report_Nov_2025.pdf',
+      type: 'Payroll',
+      period: 'Nov 2025',
+      riskLevel: 'low',
+      dateGenerated: this.getTodayFormatted(),
+      status: 'completed',
+      filePath: 'assets/reports/payroll-report.pdf',
+      fileSize: '2.4 MB'
     },
     {
       id: '2',
-      name: 'VAT_Analysis_September.pdf',
+      name: 'VAT_Summary_Nov_2025.pdf',
       type: 'VAT',
-      period: 'Sep 2025',
-      riskLevel: 'high',
-      dateGenerated: 'Oct 15, 2025',
-      status: 'completed'
+      period: 'Nov 2025',
+      riskLevel: 'medium',
+      dateGenerated: this.getTodayFormatted(),
+      status: 'completed',
+      filePath: 'assets/reports/vat-summary-report.pdf',
+      fileSize: '3.1 MB'
     },
     {
       id: '3',
-      name: 'Payroll_Compliance_Q3.pdf',
-      type: 'Payroll',
-      period: 'Q3 2025',
+      name: 'Income_Statement_Nov_2025.pdf',
+      type: 'Income Statement',
+      period: 'Nov 2025',
       riskLevel: 'low',
-      dateGenerated: 'Oct 10, 2025',
-      status: 'completed'
+      dateGenerated: this.getTodayFormatted(),
+      status: 'completed',
+      filePath: 'assets/reports/income-statement-report.pdf',
+      fileSize: '2.8 MB'
     },
     {
       id: '4',
-      name: 'Comprehensive_Tax_Report_2025.pdf',
-      type: 'Tax Risk Summary',
-      period: 'Year 2025',
-      riskLevel: 'medium',
-      dateGenerated: 'Oct 5, 2025',
-      status: 'completed'
+      name: 'Bank_Statement_Nov_2025.pdf',
+      type: 'Bank Statement',
+      period: 'Nov 2025',
+      riskLevel: 'low',
+      dateGenerated: this.getTodayFormatted(),
+      status: 'completed',
+      filePath: 'assets/reports/bank-statement-report.pdf',
+      fileSize: '3.5 MB'
     },
     {
       id: '5',
-      name: 'Q2_Risk_Analysis.pdf',
+      name: 'Tax_Risk_Summary_Nov_2025.pdf',
       type: 'Tax Risk Summary',
-      period: 'Q2 2025',
-      riskLevel: 'low',
-      dateGenerated: 'Jul 20, 2025',
-      status: 'completed'
-    },
-    {
-      id: '6',
-      name: 'VAT_Returns_Q2.pdf',
-      type: 'VAT',
-      period: 'Q2 2025',
+      period: 'Nov 2025',
       riskLevel: 'medium',
-      dateGenerated: 'Jul 15, 2025',
-      status: 'completed'
-    },
-    {
-      id: '7',
-      name: 'Monthly_Report_August.pdf',
-      type: 'Tax Risk Summary',
-      period: 'Aug 2025',
-      riskLevel: 'low',
-      dateGenerated: 'Sep 1, 2025',
-      status: 'completed'
-    },
-    {
-      id: '8',
-      name: 'Annual_Compliance_2024.pdf',
-      type: 'Payroll',
-      period: 'Year 2024',
-      riskLevel: 'low',
-      dateGenerated: 'Jan 15, 2025',
-      status: 'completed'
-    },
-    {
-      id: '9',
-      name: 'Q4_2024_Summary.pdf',
-      type: 'Tax Risk Summary',
-      period: 'Q4 2024',
-      riskLevel: 'medium',
-      dateGenerated: 'Jan 10, 2025',
-      status: 'completed'
-    },
-    {
-      id: '10',
-      name: 'Pending_VAT_Analysis.pdf',
-      type: 'VAT',
-      period: 'Oct 2025',
-      riskLevel: 'pending',
-      dateGenerated: 'Oct 22, 2025',
-      status: 'in-progress'
+      dateGenerated: this.getTodayFormatted(),
+      status: 'completed',
+      filePath: 'assets/reports/tax-risk-summary.pdf',
+      fileSize: '4.2 MB'
     }
   ];
 
@@ -183,9 +146,73 @@ export class Reports implements OnInit {
     this.filters.endDate = lastDay.toISOString().split('T')[0];
   }
 
+  /**
+   * Get today's date formatted
+   */
+  private getTodayFormatted(): string {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  }
+
+  /**
+   * Calculate summary stats dynamically
+   */
+  get totalReports(): number {
+    return this.reports.length;
+  }
+
+  get reportsThisMonth(): number {
+    const now = new Date();
+    return this.reports.filter(report => {
+      const reportDate = new Date(report.dateGenerated);
+      return reportDate.getMonth() === now.getMonth() && 
+             reportDate.getFullYear() === now.getFullYear();
+    }).length;
+  }
+
+  get avgRiskLevel(): string {
+    const riskLevels = this.reports.map(r => r.riskLevel);
+    const highCount = riskLevels.filter(r => r === 'high').length;
+    const mediumCount = riskLevels.filter(r => r === 'medium').length;
+    const lowCount = riskLevels.filter(r => r === 'low').length;
+
+    if (highCount > mediumCount && highCount > lowCount) return 'High';
+    if (mediumCount > lowCount) return 'Moderate';
+    return 'Low';
+  }
+
+  get lastGenerated(): string {
+    if (this.reports.length === 0) return 'N/A';
+    
+    // Get the most recent report
+    const sortedReports = [...this.reports].sort((a, b) => {
+      return new Date(b.dateGenerated).getTime() - new Date(a.dateGenerated).getTime();
+    });
+    
+    const lastReport = sortedReports[0];
+    const lastDate = new Date(lastReport.dateGenerated);
+    const now = new Date();
+    const diffMs = now.getTime() - lastDate.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    
+    return lastReport.dateGenerated;
+  }
+
   get filteredReports(): Report[] {
     return this.reports.filter(report => {
-      const matchesType = this.filters.reportType === 'all' || report.type.toLowerCase().includes(this.filters.reportType);
+      const matchesType = this.filters.reportType === 'all' || 
+        report.type.toLowerCase().includes(this.filters.reportType.toLowerCase());
       const matchesStatus = this.filters.status === 'all' || report.status === this.filters.status;
       const matchesSearch = this.searchQuery === '' || 
         report.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
@@ -238,13 +265,13 @@ export class Reports implements OnInit {
         type: this.formatReportType(this.newReport.type),
         period: this.formatPeriod(this.newReport.period, this.newReport.startDate, this.newReport.endDate),
         riskLevel: 'pending',
-        dateGenerated: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        status: 'in-progress'
+        dateGenerated: this.getTodayFormatted(),
+        status: 'in-progress',
+        filePath: 'assets/reports/generated-report.pdf', // Placeholder
+        fileSize: '2.5 MB'
       };
       
       this.reports.unshift(newReport);
-      this.totalReports++;
-      this.reportsThisMonth++;
       
       this.isGenerating = false;
       this.closeGenerateModal();
@@ -253,6 +280,7 @@ export class Reports implements OnInit {
       setTimeout(() => {
         newReport.status = 'completed';
         newReport.riskLevel = 'low';
+        alert(`Report "${newReport.name}" has been generated successfully!`);
       }, 3000);
     }, 2000);
   }
@@ -262,7 +290,9 @@ export class Reports implements OnInit {
       'tax-risk': 'Tax Risk Summary',
       'vat': 'VAT',
       'payroll': 'Payroll',
-      'comprehensive': 'Comprehensive'
+      'comprehensive': 'Comprehensive',
+      'bank-statement': 'Bank Statement',
+      'income-statement': 'Income Statement'
     };
     return types[type] || type;
   }
@@ -307,6 +337,9 @@ export class Reports implements OnInit {
     this.selectedReport = null;
   }
 
+  /**
+   * Download report - actual file download from assets
+   */
   downloadReport(report: Report): void {
     this.showDownloadProgress = true;
     this.downloadProgress = 0;
@@ -316,13 +349,34 @@ export class Reports implements OnInit {
       
       if (this.downloadProgress >= 100) {
         clearInterval(interval);
+        
+        // Trigger actual download
+        this.triggerFileDownload(report.filePath, report.name);
+        
         setTimeout(() => {
           this.showDownloadProgress = false;
           this.downloadProgress = 0;
-          alert(`Downloaded: ${report.name}`);
         }, 500);
       }
     }, 200);
+  }
+
+  /**
+   * Trigger actual file download from assets folder
+   */
+  private triggerFileDownload(filePath: string, fileName: string): void {
+    // Create a link element
+    const link = document.createElement('a');
+    link.href = filePath;
+    link.download = fileName;
+    link.target = '_blank'; // Open in new tab if download fails
+    
+    // Append to body, click, and remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log(`📥 Downloading: ${fileName} from ${filePath}`);
   }
 
   deleteReport(report: Report): void {
@@ -330,10 +384,7 @@ export class Reports implements OnInit {
       const index = this.reports.findIndex(r => r.id === report.id);
       if (index > -1) {
         this.reports.splice(index, 1);
-        this.totalReports--;
-        if (this.isCurrentMonth(report.dateGenerated)) {
-          this.reportsThisMonth--;
-        }
+        alert(`Report "${report.name}" has been deleted.`);
       }
     }
   }
@@ -348,13 +399,17 @@ export class Reports implements OnInit {
       setTimeout(() => {
         report.status = 'completed';
         report.riskLevel = 'low';
-        report.dateGenerated = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        report.dateGenerated = this.getTodayFormatted();
         alert(`Report "${report.name}" has been regenerated successfully.`);
       }, 3000);
+      
       this.closeViewModal();
     }
   }
 
+  /**
+   * Export all selected reports
+   */
   exportAll(): void {
     const selectedReports = this.reports.filter(r => r.selected);
     
@@ -371,6 +426,12 @@ export class Reports implements OnInit {
       
       if (this.downloadProgress >= 100) {
         clearInterval(interval);
+        
+        // Download each selected report
+        selectedReports.forEach(report => {
+          this.triggerFileDownload(report.filePath, report.name);
+        });
+        
         setTimeout(() => {
           this.showDownloadProgress = false;
           this.downloadProgress = 0;
@@ -381,14 +442,9 @@ export class Reports implements OnInit {
   }
 
   refreshReports(): void {
-    alert('Refreshing reports...');
     // In real app, this would fetch latest data from backend
-  }
-
-  isCurrentMonth(dateStr: string): boolean {
-    const date = new Date(dateStr);
-    const now = new Date();
-    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    console.log('🔄 Refreshing reports...');
+    alert('Reports refreshed successfully!');
   }
 
   previousPage(): void {
