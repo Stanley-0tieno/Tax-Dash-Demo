@@ -146,7 +146,7 @@
   <div class="progress-card">
     <div class="progress-header">
       <div>
-        <h2>Registration Overview</h2>
+        <h2>Profile Completion</h2>
         <p class="progress-description">Complete your profile setup to unlock all features</p>
       </div>
       <div class="progress-badge">
@@ -160,7 +160,6 @@
         <div 
           class="progress-fill" 
           [style.width.%]="profileCompletion"
-          [class.almost-complete]="profileCompletion >= 80"
           [class.complete]="profileCompletion === 100">
         </div>
       </div>
@@ -212,7 +211,7 @@
   <!-- Financial Summary Section -->
   <div class="financial-section">
     <div class="section-header">
-      <h2>Financial Summary</h2>
+      <h2>Financial Overview</h2>
       <div class="period-selector">
         <button 
           *ngFor="let period of periods" 
@@ -293,112 +292,74 @@
         </div>
       </div>
     </div>
-
-    <!-- Additional Financial Details -->
-    <div class="financial-details">
-      <div class="detail-card">
-        <div class="detail-header">
-          <h3>Tax Payments</h3>
-          <span class="view-all">View All <i class="fa-solid fa-arrow-right"></i></span>
-        </div>
-        <div class="detail-content">
-          <div class="payment-item">
-            <div class="payment-info">
-              <span class="payment-type">Corporate Tax</span>
-              <span class="payment-date">Oct 15, 2025</span>
-            </div>
-            <span class="payment-amount">KSh 2.4M</span>
-          </div>
-          <div class="payment-item">
-            <div class="payment-info">
-              <span class="payment-type">VAT Return</span>
-              <span class="payment-date">Oct 10, 2025</span>
-            </div>
-            <span class="payment-amount">KSh 890K</span>
-          </div>
-          <div class="payment-item">
-            <div class="payment-info">
-              <span class="payment-type">PAYE</span>
-              <span class="payment-date">Oct 5, 2025</span>
-            </div>
-            <span class="payment-amount">KSh 1.2M</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-header">
-          <h3>Upcoming Deadlines</h3>
-          <span class="view-all">View All <i class="fa-solid fa-arrow-right"></i></span>
-        </div>
-        <div class="detail-content">
-          <div class="deadline-item urgent">
-            <div class="deadline-icon">
-              <i class="fa-solid fa-exclamation"></i>
-            </div>
-            <div class="deadline-info">
-              <span class="deadline-type">VAT Return Filing</span>
-              <span class="deadline-date">Due in 3 days</span>
-            </div>
-          </div>
-          <div class="deadline-item warning">
-            <div class="deadline-icon">
-              <i class="fa-solid fa-clock"></i>
-            </div>
-            <div class="deadline-info">
-              <span class="deadline-type">Quarterly Tax Payment</span>
-              <span class="deadline-date">Due in 12 days</span>
-            </div>
-          </div>
-          <div class="deadline-item normal">
-            <div class="deadline-icon">
-              <i class="fa-solid fa-calendar"></i>
-            </div>
-            <div class="deadline-info">
-              <span class="deadline-type">Annual Return Submission</span>
-              <span class="deadline-date">Due in 45 days</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- Quick Actions Section -->
-  <div class="actions-section">
-    <h2>Quick Actions</h2>
-    <div class="actions-grid">
-      <button class="action-card" (click)="downloadCertificate()">
-        <div class="action-icon">
-          <i class="fa-solid fa-file-pdf"></i>
+  <!-- Professional Services Section -->
+  <div class="services-section">
+    <h2>Professional Services</h2>
+    <p class="services-description">Access expert support and comprehensive reporting services</p>
+    
+    <div class="services-grid">
+      <div class="service-card featured">
+        <div class="service-badge">
+          <i class="fa-solid fa-star"></i>
+          <span>Featured</span>
         </div>
-        <h3>Download Tax Certificate</h3>
-        <p>Get your latest tax compliance certificate</p>
-      </button>
-
-      <button class="action-card" (click)="updateBankDetails()">
-        <div class="action-icon">
-          <i class="fa-solid fa-building-columns"></i>
+        <div class="service-icon">
+          <i class="fa-solid fa-user-tie"></i>
         </div>
-        <h3>Update Bank Details</h3>
-        <p>Manage your banking information</p>
-      </button>
+        <h3>Request Auditor Report</h3>
+        <p>Get a comprehensive audit report from our certified tax professionals. Detailed analysis of your financial records and compliance status.</p>
+        <ul class="service-features">
+          <li><i class="fa-solid fa-check"></i> Complete financial audit</li>
+          <li><i class="fa-solid fa-check"></i> Tax compliance review</li>
+          <li><i class="fa-solid fa-check"></i> Risk assessment report</li>
+          <li><i class="fa-solid fa-check"></i> Recommendations & insights</li>
+        </ul>
+        <button class="service-btn primary" (click)="requestAuditorReport()">
+          <i class="fa-solid fa-file-invoice"></i>
+          Request Full Report
+        </button>
+        <span class="service-note">Delivered within 5-7 business days</span>
+      </div>
 
-      <button class="action-card" (click)="viewAuditLogs()">
-        <div class="action-icon">
-          <i class="fa-solid fa-clock-rotate-left"></i>
-        </div>
-        <h3>View Audit Logs</h3>
-        <p>Track all account activities</p>
-      </button>
-
-      <button class="action-card" (click)="contactSupport()">
-        <div class="action-icon">
+      <div class="service-card">
+        <div class="service-icon">
           <i class="fa-solid fa-headset"></i>
         </div>
         <h3>Contact Support</h3>
-        <p>Get help from our team</p>
-      </button>
+        <p>Get immediate assistance from our dedicated support team. We're here to help with any questions or concerns.</p>
+        <ul class="service-features">
+          <li><i class="fa-solid fa-check"></i> 24/7 support availability</li>
+          <li><i class="fa-solid fa-check"></i> Expert guidance</li>
+          <li><i class="fa-solid fa-check"></i> Quick response time</li>
+          <li><i class="fa-solid fa-check"></i> Multiple contact channels</li>
+        </ul>
+        <button class="service-btn secondary" (click)="contactSupport()">
+          <i class="fa-solid fa-comments"></i>
+          Start Chat
+        </button>
+        <span class="service-note">Average response time: 5 minutes</span>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fa-solid fa-file-pdf"></i>
+        </div>
+        <h3>Download Tax Certificate</h3>
+        <p>Download your latest tax compliance certificate. Required for tenders, contracts, and business verification.</p>
+        <ul class="service-features">
+          <li><i class="fa-solid fa-check"></i> Official KRA certificate</li>
+          <li><i class="fa-solid fa-check"></i> Digital verification</li>
+          <li><i class="fa-solid fa-check"></i> Instant download</li>
+          <li><i class="fa-solid fa-check"></i> Valid for 12 months</li>
+        </ul>
+        <button class="service-btn secondary" (click)="downloadCertificate()">
+          <i class="fa-solid fa-download"></i>
+          Download Certificate
+        </button>
+        <span class="service-note">Last updated: October 2025</span>
+      </div>
     </div>
   </div>
 </div>

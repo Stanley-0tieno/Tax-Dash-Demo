@@ -134,19 +134,17 @@ export class CompanyProfile implements OnInit {
     }
   }
 
+  requestAuditorReport(): void {
+    alert('Initiating auditor report request...\n\nOur certified tax professionals will contact you within 24 hours to discuss your requirements.');
+  }
+
   downloadCertificate(): void {
     alert('Downloading tax compliance certificate...');
-  }
-
-  updateBankDetails(): void {
-    alert('Opening bank details form...');
-  }
-
-  viewAuditLogs(): void {
-    alert('Opening audit logs...');
+    // In production, trigger actual file download
   }
 
   contactSupport(): void {
-    alert('Opening support chat...');
+    alert('Opening support chat...\n\nConnecting you with our support team.');
+    // In production, open chat widget or support interface
   }
 }
