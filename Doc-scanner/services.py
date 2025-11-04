@@ -1,65 +1,68 @@
-import time
-import tempfile
 import json
 import re
 import os
-from unstract.llmwhisperer import LLMWhispererClientV2
+from io import BytesIO
 from google import genai
+import fitz  # PyMuPDF
 
-# init whisperer client (use env vars for production)
-client = LLMWhispererClientV2(
-    base_url="https://llmwhisperer-api.us-central.unstract.com/api/v2",
-    api_key=os.getenv("LLMWHISPERER_API_KEY", "RnkEXMIG6sjFDv-5suZKdPHQzMozYH-IpINhYpv773M")
-)
+# Optional: For OCR on scanned documents
+try:
+    import pytesseract
+    from PIL import Image
+    OCR_AVAILABLE = True
+except ImportError:
+    OCR_AVAILABLE = False
 
+# Initialize Gemini client
 client_genai = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY", "AIzaSyDI02MGCVXW3d1iLPwuw_S_2B4BBoTBOow")
 )
 
 
-def whisper_extract(pdf_bytes: bytes) -> str:
+def extract_text_from_pdf(pdf_bytes: bytes, use_ocr: bool = False) -> str:
     """
-    Send PDF to LLM Whisperer, wait until it's processed,
-    and return the extracted text.
+    Extract text from PDF using PyMuPDF (replaces LLMWhisperer).
     
-    Optimizations:
-    - Adaptive polling (starts fast, then slows down)
-    - Better error handling
+    Args:
+        pdf_bytes: PDF file as bytes
+        use_ocr: If True, use OCR for pages with little/no text (requires pytesseract)
+    
+    Returns:
+        Extracted text as string
+        
+    Raises:
+        RuntimeError: If PDF processing fails
     """
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(pdf_bytes)
-        tmp_path = tmp.name
-
     try:
-        result = client.whisper(file_path=tmp_path)
-        whisper_hash = result['whisper_hash']
+        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+        text = ""
         
-        # Adaptive polling: start with 1s, increase to 3s max
-        poll_interval = 1
-        max_attempts = 60  # 60 attempts max (about 2 minutes)
+        for page_num in range(pdf_document.page_count):
+            page = pdf_document[page_num]
+            page_text = page.get_text()
+            
+            # Optional OCR fallback for scanned documents
+            if use_ocr and OCR_AVAILABLE and len(page_text.strip()) < 50:
+                try:
+                    # Render page as image with 2x scaling for better OCR
+                    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                    page_text = pytesseract.image_to_string(img)
+                except Exception as ocr_error:
+                    # If OCR fails, use whatever text we got
+                    print(f"OCR failed on page {page_num + 1}: {ocr_error}")
+            
+            text += page_text + "\n"
         
-        for attempt in range(max_attempts):
-            status = client.whisper_status(whisper_hash=whisper_hash)
-            
-            if status['status'] == 'processed':
-                resultx = client.whisper_retrieve(whisper_hash=whisper_hash)
-                return resultx['extraction']['result_text']
-            
-            elif status['status'] == 'failed':
-                raise RuntimeError(f"Whisperer failed: {status.get('message', 'Unknown error')}")
-            
-            # Adaptive wait: 1s -> 2s -> 3s (max)
-            time.sleep(poll_interval)
-            poll_interval = min(poll_interval + 0.5, 3)
+        pdf_document.close()
         
-        raise TimeoutError("PDF processing timed out after 2 minutes")
-    
-    finally:
-        # Clean up temp file
-        try:
-            os.unlink(tmp_path)
-        except Exception:
-            pass
+        if not text or len(text.strip()) < 10:
+            raise RuntimeError("No text extracted from PDF. PDF might be empty, corrupted, or require OCR.")
+        
+        return text.strip()
+        
+    except Exception as e:
+        raise RuntimeError(f"PDF text extraction failed: {str(e)}")
 
 
 def clean_json_response(text: str) -> str:
@@ -79,19 +82,29 @@ def clean_json_response(text: str) -> str:
     return text.strip()
 
 
-def extract_from_pdf(pdf_bytes: bytes) -> dict:
+def extract_from_pdf(pdf_bytes: bytes, use_ocr: bool = False) -> dict:
     """
-    Step 1: Extract raw text with Whisperer
+    Extract and structure information from PDF.
+    
+    Step 1: Extract raw text using PyMuPDF (LOCAL - no API costs!)
     Step 2: Use Gemini to structure it as JSON
     
-    Optimizations:
-    - Better prompt for JSON output
-    - Robust JSON parsing
-    - Structured error responses
+    Args:
+        pdf_bytes: PDF file as bytes
+        use_ocr: Enable OCR for scanned documents (requires pytesseract)
+    
+    Returns:
+        Dictionary with extraction results:
+        {
+            "success": bool,
+            "data": dict (if success),
+            "error": str (if failed),
+            "raw_text_preview": str (first 200 chars)
+        }
     """
     try:
-        # Extract text
-        text = whisper_extract(pdf_bytes)
+        # Extract text locally - NO MORE LLMWHISPERER API COSTS!
+        text = extract_text_from_pdf(pdf_bytes, use_ocr=use_ocr)
         
         # Improved prompt for cleaner JSON output
         prompt = f"""Extract information from this document and return ONLY a JSON object (no markdown, no explanation).
@@ -108,7 +121,7 @@ Document text:
 
 Return ONLY the JSON object, nothing else:"""
 
-        # Call Gemini
+        # Call Gemini for structured extraction
         response = client_genai.models.generate_content(
             model="gemini-2.0-flash-exp",
             contents=prompt
@@ -134,13 +147,6 @@ Return ONLY the JSON object, nothing else:"""
                 "raw_text_preview": text[:200]
             }
     
-    except TimeoutError as e:
-        return {
-            "success": False,
-            "error": "PDF processing timeout",
-            "details": str(e)
-        }
-    
     except RuntimeError as e:
         return {
             "success": False,
@@ -155,3 +161,24 @@ Return ONLY the JSON object, nothing else:"""
             "details": str(e),
             "type": type(e).__name__
         }
+
+
+# Example usage
+if __name__ == "__main__":
+    # Example: Read and process a PDF file
+    try:
+        with open("sample_invoice.pdf", "rb") as f:
+            pdf_bytes = f.read()
+        
+        # Process without OCR (faster)
+        result = extract_from_pdf(pdf_bytes, use_ocr=False)
+        
+        # Or process with OCR (for scanned documents)
+        # result = extract_from_pdf(pdf_bytes, use_ocr=True)
+        
+        print(json.dumps(result, indent=2))
+        
+    except FileNotFoundError:
+        print("Error: sample_invoice.pdf not found")
+    except Exception as e:
+        print(f"Error: {e}")
