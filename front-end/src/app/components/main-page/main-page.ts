@@ -61,13 +61,13 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
 
   // Mock data for after analysis (you'll replace this with real API data)
   private mockAnalysisData: DashboardData = {
-    riskScore: 68,
+    riskScore: 28,
     riskLabel: 'Moderate Risk',
-    compliancePercentage: 92,
+    compliancePercentage: 87,
     totalRisk: 15,
     documents: {
       bankStatements: 12,
-      payroll: 8,
+      payroll: 4,
       incomeStatements: 4,
       taxCertificates: 3,
       vatReports: 4
@@ -77,7 +77,7 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
         type: 'error',
         title: 'Missing VAT entry',
         subtitle: 'Invoice #104',
-        value: 'Ksh 111,001,200.50',
+        value: 'Ksh 511,001.50',
         icon: 'fa-circle-exclamation',
         color: 'pink'
       },
@@ -88,23 +88,8 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
         value: 'April 15',
         icon: 'fa-chart-line',
         color: 'green'
-      },
-      {
-        type: 'action',
-        title: 'Upload Data',
-        subtitle: 'Action Required',
-        value: 'Click to',
-        icon: 'fa-cloud-arrow-up',
-        color: 'pink'
-      },
-      {
-        type: 'info',
-        title: 'Tax Reports',
-        subtitle: 'Generated',
-        value: 'Generated',
-        icon: 'fa-file-pdf',
-        color: 'gray'
       }
+
     ],
     hasAnalysis: true
   };
@@ -215,7 +200,7 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
     this.initComplianceChartEmpty();
     this.initTrendChartEmpty();
   }
-
+  
   /**
    * Compliance Chart (with data)
    */
@@ -229,7 +214,7 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
     this.complianceChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels: ['2015', '2016', '2017', '2018', '2019', '2020'],
         datasets: [{
           label: 'Compliance Score',
           data: [65, 72, 78, 75, 85, 92],
@@ -285,7 +270,7 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
     this.complianceChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels: ['2015', '2016', '2017', '2018', '2019', '2020'],
         datasets: [{
           label: 'No Data',
           data: [0, 0, 0, 0, 0, 0],

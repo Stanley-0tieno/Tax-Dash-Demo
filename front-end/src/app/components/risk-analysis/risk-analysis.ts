@@ -79,7 +79,7 @@ export class RiskAnalysis implements OnInit, AfterViewInit, OnDestroy {
   // Mock data
   private readonly mockMetrics: MetricData[] = [
     {
-      title: 'Turnover Risk',
+      title: 'Turnover',
       value: 'KSh 50.2M',
       trend: '12%',
       trendDirection: 'up',
@@ -89,7 +89,7 @@ export class RiskAnalysis implements OnInit, AfterViewInit, OnDestroy {
       color: 'amber'
     },
     {
-      title: 'Payroll Consistency',
+      title: 'Payroll',
       value: 'KSh 12.8M',
       trend: '0%',
       trendDirection: 'stable',
