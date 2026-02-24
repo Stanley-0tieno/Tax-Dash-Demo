@@ -15,7 +15,7 @@ except ImportError:
 
 # Initialize Gemini client
 client_genai = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY", "AIzaSyDI02MGCVXW3d1iLPwuw_S_2B4BBoTBOow")
+    api_key=os.getenv("GEMINI_API_KEY")
 )
 
 
