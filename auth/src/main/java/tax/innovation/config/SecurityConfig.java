@@ -41,7 +41,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/auth/**").permitAll() // All auth endpoints are public
+                .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/verify").permitAll() // Public auth endpoints
+                .requestMatchers("/profile/**").authenticated() // Protected profile endpoints
                 .anyRequest().authenticated()
             );
 

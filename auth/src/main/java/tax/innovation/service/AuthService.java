@@ -13,8 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.Optional;
 
@@ -30,7 +29,7 @@ public class AuthService {
     @Autowired
     private EmailMessageSender emailMessageSender;
 
-        @Autowired
+    @Autowired
     private AuthenticationManager authenticationManager;
     
     @Autowired
@@ -46,11 +45,19 @@ public class AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        // Update last login time
+        Optional<User> userOptional = userRepository.findByEmail(loginDto.getEmail());
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setLastLogin(LocalDateTime.now());
+            userRepository.save(user);
+        }
+
         return jwtTokenProvider.generateToken(authentication);
     }
 
     public void registerUser(SignUpDto signUpDto) {
-        // Existing validation checks...
+        // validation checks...
 
         if (userRepository.existsByKraPin(signUpDto.getKraPin())) {
             throw new IllegalArgumentException("KRA PIN is already registered.");

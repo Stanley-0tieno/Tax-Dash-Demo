@@ -1,31 +1,39 @@
 server:
   port: 8084
+
 spring:
   application:
-    name: innovation
+    name: AUTH-SERVICE
   datasource:
     url: jdbc:postgresql://localhost:5432/tax-dash-auth
     username: postgres
     password: stan
     driver-class-name: org.postgresql.Driver
-  
+
   jpa:
     hibernate:  
       ddl-auto: update
     show-sql: true
-    
+
   mail:
     host: smtp.gmail.com
     port: 587
     username: ${EMAIL_USERNAME}
     password: ${EMAIL_PASSWORD}
-    properties: 
+    properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
       mail.smtp.starttls.required: true
       mail.smtp.connectiontimeout: 5000
       mail.smtp.timeout: 5000
       mail.smtp.writetimeout: 5000
+
+  # File upload configuration for logo uploads
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+      enabled: true
 
 rabbitmq:
   host: localhost
@@ -43,9 +51,14 @@ amqp:
       all: true
 
 email:
-  owner:  ${EMAIL_USERNAME}
+  owner: ${EMAIL_USERNAME}
 
 jwt:
   secret: ${JWT_SECRET}
   expiration: 86400000 # 1 day in milliseconds
-  
+
+# Cloudinary Configuration
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
