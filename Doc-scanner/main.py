@@ -1,76 +1,65 @@
+from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text, select
 from routes import router
 from database import init_db, engine, UploadedFile
-from sqlalchemy import text, select
 
-app = FastAPI(title="PDF Extraction Service with Whisperer")
+load_dotenv()
 
-# Configure CORS for Angular frontend
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🚀 Starting Document Scanner...")
+    try:
+        init_db()
+        print("✅ Database ready")
+    except Exception as e:
+        print(f"❌ Startup failed: {e}")
+        raise
+    yield
+
+app = FastAPI(
+    title="Tax Risk Analyzer — Document Scanner",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:4200",  
-    ],
+    allow_origins=["http://localhost:4200"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize database on startup
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database on startup"""
-    print("🚀 Starting application...")
-    try:
-        init_db()
-        print("✅ Database initialized successfully")
-    except Exception as e:
-        print(f"❌ Startup failed: {e}")
-        raise
-
-# Include API routes
 app.include_router(router, prefix="/api")
 
 @app.get("/")
 async def root():
     return {
-        "message": "PDF Extraction Service",
-        "status": "running",
+        "service": "Document Scanner",
+        "status":  "running",
+        "port":    8000,
         "endpoints": {
-            "extract": "POST /api/extract",
-            "get_files": "GET /api/files",
-            "get_file": "GET /api/files/{id}",
-            "delete_file": "DELETE /api/files/{id}"
+            "upload":      "POST /api/upload",
+            "analyze_all": "POST /api/analyze-all",
+            "list_files":  "GET  /api/files",
+            "delete_file": "DELETE /api/files/{id}",
+            "websocket":   "WS   /api/ws"
         }
     }
 
 @app.get("/health")
 async def health_check():
-    """Database health check"""
-    # from database import engine, UploadedFile
-    # from sqlalchemy import text, select
-    
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-            
-            result = conn.execute(select(UploadedFile)).fetchall()
-            file_count = len(result)
-        
-        return {
-            "status": "healthy",
-            "database": "connected",
-            "file_count": file_count
-        }
+            file_count = len(conn.execute(select(UploadedFile)).fetchall())
+        return {"status": "healthy", "database": "connected", "file_count": file_count}
     except Exception as e:
-        return {
-            "status": "unhealthy",
-            "database": "disconnected",
-            "error": str(e)
-        }
-
+        return {"status": "unhealthy", "error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level='info')
+    uvicorn.run(app, host="0.0.0.0", port=8000)

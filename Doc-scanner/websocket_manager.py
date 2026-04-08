@@ -15,7 +15,7 @@ class ConnectionManager:
         await websocket.accept()
         self.active_connections.add(websocket)
         print(f"✅ New WebSocket connection. Total: {len(self.active_connections)}")
-        
+    
     def disconnect(self, websocket: WebSocket):
         """Remove connection"""
         self.active_connections.discard(websocket)
