@@ -17,6 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/profile")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class CompanyProfileController {
