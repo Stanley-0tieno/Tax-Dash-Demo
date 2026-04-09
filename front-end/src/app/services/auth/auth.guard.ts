@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { 
-  CanActivate, 
-  ActivatedRouteSnapshot, 
-  RouterStateSnapshot, 
+import {
+  CanActivate,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
   Router,
   CanActivateChild
 } from '@angular/router';
@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   constructor(
     private loginService: LoginService,
     private router: Router
-  ) {}
+  ) { }
 
   canActivate(
     route: ActivatedRouteSnapshot,
@@ -41,12 +41,12 @@ export class AuthGuard implements CanActivate, CanActivateChild {
         if (isAuthenticated) {
           return true;
         }
-        
+
         // Store the attempted URL for redirecting after login
         localStorage.setItem('redirectUrl', url);
-        
+
         // Navigate to login page
-        this.router.navigate(['/login']);
+        this.router.navigate(['/log-in']);
         return false;
       })
     );
@@ -58,11 +58,11 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   providedIn: 'root'
 })
 export class NoAuthGuard implements CanActivate {
-  
+
   constructor(
     private loginService: LoginService,
     private router: Router
-  ) {}
+  ) { }
 
   canActivate(
     route: ActivatedRouteSnapshot,
@@ -74,7 +74,7 @@ export class NoAuthGuard implements CanActivate {
         if (!isAuthenticated) {
           return true;
         }
-        
+
         // User is authenticated, redirect to dashboard
         this.router.navigate(['/dashboard']);
         return false;

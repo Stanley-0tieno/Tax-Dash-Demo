@@ -8,11 +8,13 @@ import { LayoutComponent } from './components/layout/layout';
 import { RiskAnalysis } from './components/risk-analysis/risk-analysis';
 import { Reports } from './components/reports/reports';
 import { CompanyProfile } from './components/company-profile/company-profile';
+import { AuthGuard } from './services/auth/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
     component: LayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       {
         path: 'main-page',
@@ -49,5 +51,9 @@ export const routes: Routes = [
   {
     path: 'sign-up',
     loadComponent: () => import('./components/sign-up/sign-up').then(m => m.SignUp)
+  },
+  {
+    path: '**',
+    redirectTo: 'log-in'
   }
 ];

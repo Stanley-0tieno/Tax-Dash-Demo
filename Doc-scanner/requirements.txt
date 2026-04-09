@@ -6,4 +6,3 @@ pydantic==2.5.0
 
 # For your existing services
 google-generativeai
-unstract-llmwhisperer
