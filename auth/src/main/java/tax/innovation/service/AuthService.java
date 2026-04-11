@@ -13,9 +13,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
+
 import java.time.LocalDateTime;
-import java.util.UUID;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -31,7 +32,7 @@ public class AuthService {
 
     @Autowired
     private AuthenticationManager authenticationManager;
-    
+
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
@@ -45,11 +46,10 @@ public class AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Update last login time
         Optional<User> userOptional = userRepository.findByEmail(loginDto.getEmail());
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            user.setLastLogin(LocalDateTime.now());
+            user.setLastLogin(LocalDateTime.now());  // ← works now
             userRepository.save(user);
         }
 
@@ -57,8 +57,6 @@ public class AuthService {
     }
 
     public void registerUser(SignUpDto signUpDto) {
-        // validation checks...
-
         if (userRepository.existsByKraPin(signUpDto.getKraPin())) {
             throw new IllegalArgumentException("KRA PIN is already registered.");
         }
@@ -75,7 +73,7 @@ public class AuthService {
         user.setPhone(signUpDto.getPhone());
         user.setEmail(signUpDto.getEmail());
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
-        user.setVerified(false);
+        user.setVerified(false);  // ← works now (field is "verified" not "isVerified")
 
         String verificationToken = UUID.randomUUID().toString();
         user.setVerificationToken(verificationToken);
@@ -89,8 +87,8 @@ public class AuthService {
         Optional<User> userOptional = userRepository.findByVerificationToken(token);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            user.setVerified(true);
-            user.setVerificationToken(null); // Invalidate token after use
+            user.setVerified(true);   // ← works now
+            user.setVerificationToken(null);
             userRepository.save(user);
             return true;
         }

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { LoginService } from '../auth/login-service';
 
 export interface CompanyProfile {
   name: string;
@@ -43,13 +44,13 @@ export interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class CompanyProfileService {
-  private apiUrl = 'http://localhost:8084/api/auth/profile';
+  private apiUrl = 'http://localhost:8084/profile';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private loginService: LoginService) { }
 
   getProfile(): Observable<CompanyProfile> {
     console.log('🔄 Fetching profile with token...');
-    return this.http.get<CompanyProfile>(this.apiUrl).pipe(
+    return this.http.get<CompanyProfile>(this.apiUrl, { headers: this.loginService.getAuthHeaders() }).pipe(
       catchError(error => {
         console.error('Error fetching profile:', error);
         return throwError(() => new Error('Failed to fetch profile. Please try again.'));
@@ -58,7 +59,7 @@ export class CompanyProfileService {
   }
 
   updateProfile(updateData: UpdateProfileRequest): Observable<ApiResponse<CompanyProfile>> {
-    return this.http.put<ApiResponse<CompanyProfile>>(this.apiUrl, updateData).pipe(
+    return this.http.put<ApiResponse<CompanyProfile>>(this.apiUrl, updateData, { headers: this.loginService.getAuthHeaders() }).pipe(
       catchError(error => {
         console.error('Error updating profile:', error);
         return throwError(() => new Error('Failed to update profile. Please try again.'));
@@ -70,7 +71,14 @@ export class CompanyProfileService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/logo`, formData).pipe(
+    // ← Only pass Authorization header — NO Content-Type
+    // Browser automatically sets multipart/form-data with correct boundary
+    const token = this.loginService.getToken();
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/logo`, formData, { headers }).pipe(
       catchError(error => {
         console.error('Error uploading logo:', error);
         const errorMessage = error.error?.message || 'Failed to upload logo. Please try again.';
@@ -80,7 +88,7 @@ export class CompanyProfileService {
   }
 
   deleteLogo(): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/logo`).pipe(
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/logo`, { headers: this.loginService.getAuthHeaders() }).pipe(
       catchError(error => {
         console.error('Error deleting logo:', error);
         return throwError(() => new Error('Failed to delete logo. Please try again.'));
@@ -89,7 +97,7 @@ export class CompanyProfileService {
   }
 
   getProfileCompletion(): Observable<{ completion: number; hint: string }> {
-    return this.http.get<{ completion: number; hint: string }>(`${this.apiUrl}/completion`).pipe(
+    return this.http.get<{ completion: number; hint: string }>(`${this.apiUrl}/completion`, { headers: this.loginService.getAuthHeaders() }).pipe(
       catchError(error => {
         console.error('Error fetching profile completion:', error);
         return throwError(() => new Error('Failed to fetch completion status.'));

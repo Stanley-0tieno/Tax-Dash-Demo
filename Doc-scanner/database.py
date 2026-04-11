@@ -17,7 +17,7 @@ if "sqlite" in DATABASE_URL.lower():
 # Create PostgreSQL engine
 engine = create_engine(
     DATABASE_URL,
-    echo=True,  # Set to True to see SQL queries (helpful for debugging)
+    echo=True,  # Set to True to see SQL queries (for debugging)
     pool_pre_ping=True,  # Verify connections before using them
     pool_size=10,
     max_overflow=20
