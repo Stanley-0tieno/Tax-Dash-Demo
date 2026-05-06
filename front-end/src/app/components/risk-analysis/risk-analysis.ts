@@ -63,145 +63,152 @@ export class RiskAnalysis implements OnInit, AfterViewInit, OnDestroy {
   progressPercent = 0;
   showCharts = false;
   showSparkline = false;
-  
+
   // Data
   metrics: MetricData[] = [];
   insights: InsightData[] = [];
   tableData: TableRow[] = [];
-  
+
   // Charts - PUBLIC so they can be accessed in template
   riskTrendChart: Chart | null = null;
   sparklineChart: Chart | null = null;
-  
+
   // Keep progress interval private as it's not used in template
   private progressInterval: any;
 
   // Mock data
   private readonly mockMetrics: MetricData[] = [
     {
-      title: 'Turnover',
-      value: 'KSh 50.2M',
-      trend: '12%',
+      title: 'October Invoice',
+      value: 'KSh 7.20M',
+      trend: '100%',
       trendDirection: 'up',
-      riskLabel: 'Moderate Variance',
-      riskLevel: 'moderate',
-      icon: 'fa-chart-column',
-      color: 'amber'
-    },
-    {
-      title: 'Payroll',
-      value: 'KSh 12.8M',
-      trend: '0%',
-      trendDirection: 'stable',
-      riskLabel: 'Stable',
+      riskLabel: 'Safaricom PLC',
       riskLevel: 'low',
-      icon: 'fa-users',
+      icon: 'fa-file-invoice-dollar',
       color: 'green'
     },
     {
-      title: 'VAT Returns',
-      value: 'KSh 4.5M',
-      trend: '8%',
-      trendDirection: 'down',
-      riskLabel: 'Underreported',
+      title: 'Gross Payroll',
+      value: 'KSh 3.87M',
+      trend: '54%',
+      trendDirection: 'stable',
+      riskLabel: 'High PR-to-Rev Ratio',
       riskLevel: 'high',
-      icon: 'fa-percent',
+      icon: 'fa-users',
       color: 'red'
     },
     {
-      title: 'VAT Refund Claims',
-      value: 'KSh 1.2M',
-      trend: '5%',
-      trendDirection: 'up',
-      riskLabel: 'Pending Validation',
-      riskLevel: 'pending',
-      icon: 'fa-receipt',
-      color: 'gray'
+      title: 'VAT Obligation',
+      value: 'KSh 993K',
+      trend: '16%',
+      trendDirection: 'down',
+      riskLabel: 'Not Fully Remitted',
+      riskLevel: 'moderate',
+      icon: 'fa-percent',
+      color: 'amber'
+    },
+    {
+      title: 'Closing Balance',
+      value: '-KSh 5.80M',
+      trend: 'Insolvent',
+      trendDirection: 'down',
+      riskLabel: 'Cash flow stress',
+      riskLevel: 'high',
+      icon: 'fa-building-columns',
+      color: 'red'
     }
   ];
 
   private readonly mockInsights: InsightData[] = [
     {
       priority: 'critical',
-      time: '2h ago',
-      title: 'VAT Returns Discrepancy',
-      description: 'VAT returns show an 18.7% underreporting compared to expected calculations based on declared turnover. This pattern has persisted for the last 3 months.',
+      time: '1h ago',
+      title: 'Cash Flow Insolvency',
+      description: 'Bank overdraft of approx. KSh 5.8M by end of month 4 — company is technically insolvent on cash basis. Payroll for 50 employees is being disbursed without matching revenue inflows in Q3–Q4.',
       hasMetrics: false
     },
     {
       priority: 'warning',
-      time: '3h ago',
-      title: 'Turnover Mismatch Detected',
-      description: 'Turnover shows a 12% variance between declared and recorded values for Q3. This could indicate timing differences or classification errors.',
+      time: '2h ago',
+      title: 'PAYE Regularity Discrepancy',
+      description: 'PAYE remitted each month but figures are below the October payroll register total of KSh 781K. Reconcile to avoid KRA penalties.',
+      hasMetrics: true
+    },
+    {
+      priority: 'warning',
+      time: '4h ago',
+      title: 'VAT Compliance Risk',
+      description: 'VAT collections from the KSh 7.2M Safaricom invoice (KSh 993K) not yet fully visible in remittance records. 3 VAT payments recorded against the obligation.',
       hasMetrics: false
     },
     {
       priority: 'info',
       time: '5h ago',
-      title: 'Increased Refund Activity',
-      description: 'VAT refund requests have risen by 8%, possibly due to input tax accumulation. This trend is normal for businesses with high capital expenditure.',
-      hasMetrics: true
+      title: 'NSSF, NHIF & Housing Levy Compliant',
+      description: 'NHIF (KSh 60K/month), NSSF, and Affordable Housing Levy payments recorded in all 3 months, aligning perfectly with the payroll register.',
+      hasMetrics: false
     }
   ];
 
   private readonly mockTableData: TableRow[] = [
     {
-      metric: 'Turnover',
-      icon: 'fa-chart-column',
-      iconColor: '#FFA502',
-      variance: '-12.4%',
-      isPositive: false,
-      risk: 'medium',
-      timestamp: '2 hours ago'
-    },
-    {
-      metric: 'Payroll',
-      icon: 'fa-users',
-      iconColor: '#00B894',
-      variance: '+0.3%',
-      isPositive: true,
-      risk: 'low',
-      timestamp: '1 hour ago'
-    },
-    {
-      metric: 'VAT Returns',
-      icon: 'fa-percent',
+      metric: 'Cash Flow Stress',
+      icon: 'fa-building-columns',
       iconColor: '#FF6B6B',
-      variance: '-18.7%',
+      variance: '-8.0M',
       isPositive: false,
       risk: 'high',
-      timestamp: '3 hours ago'
+      timestamp: 'Today'
     },
     {
-      metric: 'VAT Refunds',
+      metric: 'Payroll-to-Revenue',
+      icon: 'fa-chart-pie',
+      iconColor: '#FF6B6B',
+      variance: '54%',
+      isPositive: false,
+      risk: 'high',
+      timestamp: 'Today'
+    },
+    {
+      metric: 'VAT Compliance',
       icon: 'fa-receipt',
-      iconColor: '#636E72',
-      variance: '+8.2%',
+      iconColor: '#FFA502',
+      variance: 'Pending',
       isPositive: true,
-      risk: 'pending',
-      timestamp: '30 mins ago'
+      risk: 'medium',
+      timestamp: '2 hrs ago'
     },
     {
-      metric: 'Revenue Recognition',
-      icon: 'fa-money-bill-trend-up',
-      iconColor: '#6C5CE7',
-      variance: '+2.1%',
-      isPositive: true,
-      risk: 'low',
-      timestamp: '5 hours ago'
-    },
-    {
-      metric: 'Expense Claims',
-      icon: 'fa-file-invoice-dollar',
-      iconColor: '#A29BFE',
-      variance: '-5.6%',
+      metric: 'PAYE Regularity',
+      icon: 'fa-money-bill-transfer',
+      iconColor: '#FFA502',
+      variance: 'Underpaid',
       isPositive: false,
       risk: 'medium',
-      timestamp: '4 hours ago'
+      timestamp: '3 hrs ago'
+    },
+    {
+      metric: 'NSSF/NHIF',
+      icon: 'fa-shield-halved',
+      iconColor: '#00B894',
+      variance: 'Compliant',
+      isPositive: true,
+      risk: 'low',
+      timestamp: '1 day ago'
+    },
+    {
+      metric: 'Housing Levy',
+      icon: 'fa-house-chimney-user',
+      iconColor: '#00B894',
+      variance: 'Compliant',
+      isPositive: true,
+      risk: 'low',
+      timestamp: '1 day ago'
     }
   ];
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     console.log('🎯 Risk Analysis initialized - ready for demo');
@@ -227,55 +234,55 @@ export class RiskAnalysis implements OnInit, AfterViewInit, OnDestroy {
     console.log('🚀 Starting ML analysis simulation...');
     this.isAnalyzing = true;
     this.progressPercent = 0;
-    
+
     // Reset data
     this.metrics = [];
     this.tableData = [];
     this.insights = [];
     this.showCharts = false;
     this.showSparkline = false;
-    
+
     // Simulate progress bar
     this.startProgressBar();
-    
+
     // Step 1: Processing documents (2s)
     this.currentStep = 'Processing uploaded documents...';
     await this.delay(2000);
-    
+
     // Step 2: Extracting data (2s)
     this.currentStep = 'Extracting financial data...';
     await this.delay(2000);
-    
+
     // Step 3: Running ML models (2.5s)
     this.currentStep = 'Running risk analysis models...';
     await this.delay(2500);
-    
+
     // Step 4: Generating insights (2.5s)
     this.currentStep = 'Generating AI insights...';
     await this.delay(2500);
-    
+
     // Complete progress
     this.progressPercent = 100;
     this.cdr.detectChanges();
     await this.delay(500);
-    
+
     // Clear progress interval
     if (this.progressInterval) {
       clearInterval(this.progressInterval);
       this.progressInterval = null;
     }
-    
+
     // Complete - Use setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
     setTimeout(() => {
       this.isAnalyzing = false;
       this.analysisComplete = true;
       this.currentStep = '';
       this.cdr.detectChanges();
-      
+
       // Reveal data progressively
       this.revealData();
     }, 100);
-    
+
     console.log('✅ Analysis complete - ready to reveal data!');
   }
 
@@ -286,7 +293,7 @@ export class RiskAnalysis implements OnInit, AfterViewInit, OnDestroy {
     const totalDuration = 9500; // 9.5 seconds total
     const intervalTime = 100; // Update every 100ms
     const increment = (100 / totalDuration) * intervalTime;
-    
+
     this.progressInterval = setInterval(() => {
       if (this.progressPercent < 95) {
         this.progressPercent += increment;
@@ -300,7 +307,7 @@ export class RiskAnalysis implements OnInit, AfterViewInit, OnDestroy {
    */
   private async revealData(): Promise<void> {
     console.log('📊 Starting data reveal...');
-    
+
     // Show metrics one by one with delay
     for (let i = 0; i < this.mockMetrics.length; i++) {
       await this.delay(400);
@@ -308,24 +315,24 @@ export class RiskAnalysis implements OnInit, AfterViewInit, OnDestroy {
       this.cdr.detectChanges();
     }
     console.log('✅ Metrics revealed');
-    
+
     // Wait before showing charts
     await this.delay(600);
     this.showCharts = true;
     this.cdr.detectChanges();
     console.log('📈 Chart section visible, waiting for DOM...');
-    
+
     // Wait longer for DOM to fully render the canvas
     await this.delay(300);
-    
+
     // Use requestAnimationFrame to ensure DOM is ready
     requestAnimationFrame(() => {
       this.initRiskTrendChart();
     });
-    
+
     // Wait a bit
     await this.delay(500);
-    
+
     // Show table data
     for (let i = 0; i < this.mockTableData.length; i++) {
       await this.delay(200);
@@ -333,10 +340,10 @@ export class RiskAnalysis implements OnInit, AfterViewInit, OnDestroy {
       this.cdr.detectChanges();
     }
     console.log('✅ Table data revealed');
-    
+
     // Wait before insights
     await this.delay(400);
-    
+
     // Show insights one by one
     for (let i = 0; i < this.mockInsights.length; i++) {
       await this.delay(500);
@@ -344,15 +351,15 @@ export class RiskAnalysis implements OnInit, AfterViewInit, OnDestroy {
       this.cdr.detectChanges();
     }
     console.log('✅ Insights revealed');
-    
+
     // Initialize sparkline last
     await this.delay(300);
     this.showSparkline = true;
     this.cdr.detectChanges();
     console.log('📊 Sparkline section visible, waiting for DOM...');
-    
+
     await this.delay(200);
-    
+
     // Use requestAnimationFrame for sparkline too
     requestAnimationFrame(() => {
       this.initSparklineChart();

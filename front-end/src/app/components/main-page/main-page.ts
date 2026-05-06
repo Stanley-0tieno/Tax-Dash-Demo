@@ -38,10 +38,10 @@ interface AnomalyItem {
   styleUrls: ['./main-page.scss']
 })
 export class MainPage implements OnInit, AfterViewInit, OnDestroy {
-  
+
   // State flag - determines if user has completed analysis
   hasAnalysisData = false;
-  
+
   // Dashboard data with default empty values
   dashboardData: DashboardData = {
     riskScore: 0,
@@ -53,7 +53,7 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
       payroll: 0,
       incomeStatements: 0,
       taxCertificates: 0,
-      vatReports:0
+      vatReports: 0
     },
     anomalies: [],
     hasAnalysis: false
@@ -61,35 +61,34 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
 
   // Mock data for after analysis (you'll replace this with real API data)
   private mockAnalysisData: DashboardData = {
-    riskScore: 28,
-    riskLabel: 'Moderate Risk',
-    compliancePercentage: 87,
-    totalRisk: 15,
+    riskScore: 74,
+    riskLabel: 'High Risk',
+    compliancePercentage: 54,
+    totalRisk: 74,
     documents: {
-      bankStatements: 12,
-      payroll: 4,
-      incomeStatements: 4,
-      taxCertificates: 3,
-      vatReports: 4
+      bankStatements: 4,
+      payroll: 1,
+      incomeStatements: 1,
+      taxCertificates: 2,
+      vatReports: 3
     },
     anomalies: [
       {
         type: 'error',
-        title: 'Missing VAT entry',
-        subtitle: 'Invoice #104',
-        value: 'Ksh 511,001.50',
-        icon: 'fa-circle-exclamation',
+        title: 'Negative Cash Balance',
+        subtitle: 'Month 4 Closing Bal',
+        value: '-Ksh 5.8M',
+        icon: 'fa-arrow-trend-down',
         color: 'pink'
       },
       {
         type: 'warning',
-        title: 'Inconsistent Income data',
-        subtitle: 'Q3 Report',
-        value: 'April 15',
-        icon: 'fa-chart-line',
-        color: 'green'
+        title: 'PAYE Under-remittance',
+        subtitle: 'October Discrepancy',
+        value: 'Ksh 781K Expected',
+        icon: 'fa-circle-exclamation',
+        color: 'gray'
       }
-
     ],
     hasAnalysis: true
   };
@@ -98,11 +97,11 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
   private complianceChart: Chart | null = null;
   private trendChart: Chart | null = null;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
     console.log('📊 Dashboard initialized');
-    
+
     // Check if we have analysis data from previous navigation
     this.checkForAnalysisData();
   }
@@ -200,7 +199,7 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
     this.initComplianceChartEmpty();
     this.initTrendChartEmpty();
   }
-  
+
   /**
    * Compliance Chart (with data)
    */
@@ -243,11 +242,11 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
           }
         },
         scales: {
-          x: { 
+          x: {
             grid: { display: false },
             ticks: { color: '#636E72', font: { size: 11 } }
           },
-          y: { 
+          y: {
             display: false,
             beginAtZero: true,
             max: 100
@@ -290,11 +289,11 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
           tooltip: { enabled: false }
         },
         scales: {
-          x: { 
+          x: {
             grid: { display: false },
             ticks: { color: '#B2BEC3', font: { size: 11 } }
           },
-          y: { 
+          y: {
             display: false,
             beginAtZero: true,
             max: 100
@@ -405,17 +404,17 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
   loadDemoData(): void {
     this.dashboardData = this.mockAnalysisData;
     this.hasAnalysisData = true;
-    
+
     // Store in sessionStorage
     sessionStorage.setItem('analysisComplete', 'true');
     sessionStorage.setItem('analysisData', JSON.stringify(this.mockAnalysisData));
-    
+
     // Reinitialize charts with data
     this.destroyCharts();
     setTimeout(() => {
       this.initializeCharts();
     }, 100);
-    
+
     console.log('✅ Demo data loaded');
   }
 
@@ -426,13 +425,13 @@ export class MainPage implements OnInit, AfterViewInit, OnDestroy {
     sessionStorage.removeItem('analysisComplete');
     sessionStorage.removeItem('analysisData');
     this.loadDefaultState();
-    
+
     // Reinitialize empty charts
     this.destroyCharts();
     setTimeout(() => {
       this.initializeEmptyCharts();
     }, 100);
-    
+
     console.log('🗑️ Analysis data cleared');
   }
 }
