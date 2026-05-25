@@ -478,4 +478,3 @@ Tax-Dash-Demo/
 
 **Onyango Stanley Otieno**  
 BSc Computer Science — Egerton University  
-COMP 493: Computer Systems Project — 2026
