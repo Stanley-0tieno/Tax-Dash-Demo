@@ -3,8 +3,7 @@
 > An end-to-end tax compliance risk platform for Kenyan SMEs.  
 > Upload financial documents → AI extracts the data → ML model scores your tax risk.
 
-**Final Year Project — Egerton University COMP 493**  
-**Onyango Stanley Otieno | S13/O7985/22**
+**Onyango Stanley Otieno**
 
 ---
 
